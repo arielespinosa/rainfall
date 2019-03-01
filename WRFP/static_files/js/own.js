@@ -2,12 +2,15 @@ $(document).ready(function () {
    //--Vars---------------------------------------------------------
    var titulo = document.title;
    
+ 
    //var ctx = document.getElementById("myChart").getContext('2d');
    //PlotLineChart(ctx);
 
    if((titulo.indexOf("-") == -1) && (titulo.indexOf("|") == -1)){
-     var ctx2 = document.getElementById('canvas').getContext('2d');
-     PlotMultiLineChart(ctx2);
+       
+     /*var ctx2 = document.getElementById('canvas').getContext('2d');
+     PlotMultiLineChart(ctx2);*/
+
    };
 
 

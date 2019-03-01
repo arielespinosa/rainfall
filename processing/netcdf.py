@@ -45,24 +45,6 @@ class NetCDF():
                                         val = self.dataset.variables[var][0][x][y]
                                         values.append(val)
                                 data.append(values)                                
-                                values = []
+                                values = []                               
                 return data    
-
-
-class ManagerNetCDF():
-
-        def __init__(self, path=None, files_format=None, compress=None):
-
-                self.path = path
-                self.files_format = "wrfout_d03_2019-01-30_00:00:00"
-                self.compress = True
-
-
-        def Files(self):
-               ruta = 'd03'
-               listaarchivos = []
-
-               for (_, _, archivos) in walk(ruta):
-                     listaarchivos.extend(archivos)
-               return listaarchivos
 

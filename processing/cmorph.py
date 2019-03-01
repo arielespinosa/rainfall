@@ -30,12 +30,19 @@ LEFT    = -105
 RIGHT   = -50
 
 class CMORPHF():
+
+         # Constructor de la clase
+        def __init__(self, filename=None, dataset=None):
+
+                self.filename = filename               
+                self.dataset = dataset
         
-        def Read(self, filename):                
+        def Read(self):                
                 dataset = []
+           
                 # Abrir el fichero CMORPH
                 try:                
-                        file = open(filename, 'rb')
+                        file = open(self.filename, 'rb')
                         # Leer bloque de la primera media hora
                         data1 = file.read(Ny*Nx)                                        
                         dumm  = file.read(Ny*Nx)
@@ -74,10 +81,17 @@ class CMORPHF():
                                        # Formar el dataset redondeando los valores a 4 lugares despues de la coma
                                        point_values = [round(lon,4), round(lat,4), round(A,4)]                                       
                                        dataset.append(point_values)
-                # Devolver el dataset                     
-                return dataset
-     
+                       
+                # Devolver el dataset  
+                # columnas = 756 [0 - 755] ; filas = 482 [ ]                              
+                self.dataset = dataset
+
+        def Dataset(self):
+                return self.dataset       
         
+        def OnlyLatLong(self):                          
+                return np.delete(self.dataset, 2, axis=1) 
+
         def Imprimir(self):
                 print("%7.2f, %6.2f, %5.1f"%(lon, lat, A))
 
