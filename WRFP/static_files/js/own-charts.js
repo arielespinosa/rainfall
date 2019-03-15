@@ -92,15 +92,15 @@ function PlotMultiLineChart(ctx2){
 
 $(document).ready(function () {  
 
-    var titulo = document.title;
-    
+    //var titulo = document.title;
+    //alert(titulo);
     //var ctx = document.getElementById("myChart").getContext('2d');
     //PlotLineChart(ctx);
  
-   // if(titulo.indexOf("|") == -1){      
+    //if(titulo.indexOf("|") == -1){      
       var ctx2 = document.getElementById('canvas').getContext('2d');
-      alert(titulo);
-      //PlotMultiLineChart(ctx2);
+        //alert(titulo);
+     PlotMultiLineChart(ctx2);
     //};
  
   });			 

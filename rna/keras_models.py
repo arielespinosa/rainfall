@@ -1,18 +1,17 @@
 '''
   Implementation of custom keras regression models
 '''
-
 import os
 import pickle
-from utils.custom_losses import *
+#from utils.custom_losses import *
 from keras.models import Model
 from keras.layers import Input, Dense, Activation, Dropout
 from keras.layers import LSTM, GRU
 from keras.layers.noise import AlphaDropout
 from keras.layers import BatchNormalization
 from keras.layers import Concatenate, Reshape
-from utils.custom_layers import Antirectifier, Capsule
-from utils.custom_layers import RBFlayer, margin_loss, Lambda
+#from utils.custom_layers import Antirectifier, Capsule
+#from utils.custom_layers import RBFlayer, margin_loss, Lambda
 from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau
 
 # Definition of some tensorflow callbacks:
@@ -31,73 +30,33 @@ stop_train = EarlyStopping(
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
 
-# Capsules neural network.
-# Returns a compiled Keras model instance.
-class Capsule():
-
-	def __init__(self, parameters):
-		self.num_capsules=parameters["num_capsules"]
-	    self.dim_capsules=parameters["dim_capsules"]
-	    self.routings=parameters["routings"]
-	    self.activation=parameters["activation"]
-	    self.kernel_initializer=parameters["kernel_initializer"]
-	    self.optimizer=parameters["optimizer"]
-	    self.loss=parameters["loss"]
-	    self.share_weights=parameters["share_weights"]
-	    self.num_inputs=parameters["num_inputs"]
-	    self.num_features=parameters["num_features"]
-	    self.num_classes=parameters["num_classes"]
-	    self.for_regression=parameters["for_regression"]
-		self.name = "capsule_model"
-		
-	def create_model():
-		inputs = Input(shape=(self.num_inputs, self.num_features))
-
-		capsule = Capsule(
-			self.num_classes,
-			self.dim_capsules,
-			routings=self.routings,
-			share_weights=self.share_weights,
-			activation=self.activation)(inputs)
-		#
-		x = Lambda(lambda z: K.sqrt(K.sum(K.square(z), 2)))(capsule)
-
-		if for_regression:
-			x = Dense(num_classes)(x)
-
-		model = Model(inputs=inputs, outputs=x, name=)
-		model.compile(loss=self.loss, optimizer=self.optimizer, metrics=['accuracy'])
-		model.summary()
-
-		return model
-
 # Fully-connected MLP neural network.
 # Returns a compiled Keras model instance.
 class MultiLayerPerceptron():
 	
 	def __init__(self, parameters):
 		self.dense_units=parameters["dense_units"]
-	    self.h_activation=parameters["h_activation"]
-	    self.o_activation=parameters["o_activation"]
-	    self.antirectifier=parameters["antirectifier"]
-	    self.batch_norm=parameters["batch_norm"]
-	    self.dropout=parameters["dropout"]
-	    self.dropout_rate=parameters["dropout_rate"]
-	    self.kernel_initializer=parameters["kernel_initializer"]
-	    self.optimizer=parameters["optimizer"]
-	    self.loss=parameters["loss"]
-	    self.num_classes=parameters["num_classes"]
-	    self.num_inputs=parameters["num_inputs"]
+		self.h_activation=parameters["h_activation"]
+		self.o_activation=parameters["o_activation"]
+		self.antirectifier=parameters["antirectifier"]
+		self.batch_norm=parameters["batch_norm"]
+		self.dropout=parameters["dropout"]
+		self.dropout_rate=parameters["dropout_rate"]
+		self.kernel_initializer=parameters["kernel_initializer"]
+		self.optimizer=parameters["optimizer"]
+		self.loss=parameters["loss"]
+		self.num_classes=parameters["num_classes"]
+		self.num_inputs=parameters["num_inputs"]
 		self.name = "mlp_model"
 	
 	def create_model():
-		if np.isscalar(dense_units):
-			dense_units = (dense_units, )
+		if np.isscalar(self.dense_units):
+			dense_units = (self.dense_units, )
 		else:
-			if len(dense_units) == 0:
+			if len(self.dense_units) == 0:
 				raise ValueError('dense_units must be a scalar or a tuple')
 
-		inputs = Input(shape=(num_inputs, ), name='inputs')
+		inputs = Input(shape=(self.num_inputs, ), name='inputs')
 
 		# Hidden Layers
 		x = inputs
@@ -125,6 +84,47 @@ class MultiLayerPerceptron():
 		model.summary()
 		return model
 
+"""
+# Capsules neural network.
+# Returns a compiled Keras model instance.
+class Capsule():
+
+	def __init__(self, parameters):
+		self.num_capsules=parameters["num_capsules"]
+		self.dim_capsules=parameters["dim_capsules"]
+		self.routings=parameters["routings"]
+		self.activation=parameters["activation"]
+		self.kernel_initializer=parameters["kernel_initializer"]
+		self.optimizer=parameters["optimizer"]
+		self.loss=parameters["loss"]
+		self.share_weights=parameters["share_weights"]
+		self.num_inputs=parameters["num_inputs"]
+		self.num_features=parameters["num_features"]
+		self.num_classes=parameters["num_classes"]
+		self.for_regression=parameters["for_regression"]
+		self.name = "capsule_model"
+		
+	def create_model():
+		inputs = Input(shape=(self.num_inputs, self.num_features))
+
+		capsule = Capsule(
+			self.num_classes,
+			self.dim_capsules,
+			routings=self.routings,
+			share_weights=self.share_weights,
+			activation=self.activation)(inputs)
+		#
+		x = Lambda(lambda z: K.sqrt(K.sum(K.square(z), 2)))(capsule)
+
+		if for_regression:
+			x = Dense(num_classes)(x)
+
+		model = Model(inputs=inputs, outputs=x, name=self.name)
+		model.compile(loss=self.loss, optimizer=self.optimizer, metrics=['accuracy'])
+		model.summary()
+
+		return model
+
 # Radial-Basis-Function neural network.
 # Returns a compiled Keras model instance.    
 class RBF_Regressor():
@@ -132,14 +132,14 @@ class RBF_Regressor():
 	def __init__(self, parameters):	
 		self.units=parameters["units"]
 		self.output_activation=parameters["output_activation"]
-	    self.kernel_initializer=parameters["kernel_initializer"]
-	    self.kernel_activation=parameters["kernel_activation"]
+		self.kernel_initializer=parameters["kernel_initializer"]
+		self.kernel_activation=parameters["kernel_activation"]
 		self.kernel_constraint=parameters["kernel_constraint"]
-	    self.loss=parameters["loss"]
-	    self.optimizer=parameters["optimizer"]
-	    self.num_inputs=parameters["num_inputs"]	    
-	    self.num_classes=parameters["num_classes"]
-	    self.for_regression=parameters["for_regression"]
+		self.loss=parameters["loss"]
+		self.optimizer=parameters["optimizer"]
+		self.num_inputs=parameters["num_inputs"]	    
+		self.num_classes=parameters["num_classes"]
+		self.for_regression=parameters["for_regression"]
 		self.name = "rbf_model"
 		
 	def create_model():
@@ -173,12 +173,12 @@ class LSTM():
 		self.units=parameters["units"]
 		self.activation=parameters["activation"]
 		self.output_activation=parameters["output_activation"]
-	    self.kernel_initializer=parameters["kernel_initializer"]	    
+		self.kernel_initializer=parameters["kernel_initializer"]	    
 		self.kernel_constraint=parameters["kernel_constraint"]
-	    self.loss=parameters["loss"]
-	    self.optimizer=parameters["optimizer"]
-	    self.num_inputs=parameters["num_inputs"]	    
-	    self.num_classes=parameters["num_classes"]	    
+		self.loss=parameters["loss"]
+		self.optimizer=parameters["optimizer"]
+		self.num_inputs=parameters["num_inputs"]	    
+		self.num_classes=parameters["num_classes"]	    
 		self.name = "lstm_model"
 		
 	def create_model():
@@ -228,3 +228,4 @@ def save_keras_model(model, path=None):
     model.save(save_path)
     
 
+"""
