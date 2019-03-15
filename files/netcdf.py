@@ -1,7 +1,8 @@
 import numpy as np
 import netCDF4 as nc 
-from os import walk       
+import os     
 from datetime import datetime,date                                                 
+from pickle import dump, dumps, load, loads
 
 class NetCDF():
         
@@ -11,6 +12,7 @@ class NetCDF():
                 self.filename = filename
                 self.coord = { "long":183, "lat":411 }
                 self.dataset = nc.Dataset(self.filename, 'r')
+                self.var_data = None
         
         def Metadata(self):
                 """
@@ -24,6 +26,18 @@ class NetCDF():
 
         def Dataset(self):                          
                 return self.dataset
+        
+        # Guarda los datos en un fichero el cual se indica su nombre
+        def SaveToFile(self, filename):                
+                if not os.path.exists(filename):
+                        os.mkdir(filename[:filename.rfind('/')+1])
+                with open(filename, "wb") as f:
+                        dump(self.var_data, f, protocol=2)
+
+        # Carga los datos desde un fichero el cual se indica su nombre. Los datos son devueltos
+        def LoadFromFile(self, filename):
+                with open(filename, "rb") as f:
+                        self.dataset = load(f)
         
         def XLONG(self):
                 return np.array(self.dataset["XLONG"][0][0])
@@ -63,9 +77,11 @@ class NetCDF():
                                 else:
                                         pass                         
                 if get_as == "list":
-                        return data
+                        self.var_data = data
+                        return self.var_data
                 elif get_as == "dict":
-                        return {self.dataset.START_DATE: values}
+                        self.var_data = values
+                        return {self.dataset.START_DATE: self.var_data}
                 else:
                         pass
 

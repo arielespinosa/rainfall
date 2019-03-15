@@ -4,6 +4,7 @@ from files.cmorph import*
 import numpy as np
 import pandas as pd
 
+
 # Operaciones sobre SisPI (wrf)
 """
 sispi = NetCDF("wrfout_d03")
