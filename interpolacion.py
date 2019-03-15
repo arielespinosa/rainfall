@@ -9,6 +9,7 @@ from numpy import random
 import math
 
 t_columnas = 756
+t_columnas_sispi = 411
 t_filas = 481
 #fila = 0
 #columna = 0
@@ -39,7 +40,6 @@ class ReadSispi(threading.Thread):
             v = ['XLONG', 'XLAT']
             self.wrf = NetCDF("wrfout_d03")
             self.wrf_domain = self.wrf.Variables(v)
-
             with open("sispi", "wb") as f:
                 dump(self.wrf_domain, f, protocol=2)
 
@@ -117,6 +117,11 @@ def interpolar_sispi_cmorph():
 def read_interpolation_values(file):
     return read_serialize_file(file)
 
+
+# ESTACIONES 
+def sispi_indice(fila, columna):
+    return (fila - 1) * t_columnas_sispi + columna - 1
+
 def read_estaciones():
     estaciones, inst, data = [], [], []
 
@@ -133,65 +138,67 @@ def read_estaciones():
             inst.append(nombre)            
             inst.append(numero)
         else:
-            line = estaciones[i]
-            #print(line)
-            
+            line = estaciones[i]           
             pos = line.split(" ")            
-            pos = [float(val.strip()) for val in pos]
-            #pos = [val.strip() for val in pos]
+            pos = [float(val.strip()) for val in pos]           
             inst.append(pos)
             data.append(inst)
             inst = []
 
     return data
 
+# Interpola la region grid1 a grid2. Si se indica un id sera la primera posicion del grid
+def vecino_mas_cercano2(grid1, grid2):    
+    indice, distancia = -1, 1
+    interpolacion = []
 
-def interpolar_sispi_estaciones():
-    estaciones = read_estaciones()
-
-    with open("estaciones", "r") as f:
-        for line in f:            
-            estaciones.append(line)
+    valores_columnas = grid2[:411, 0]
+    valores_filas = grid2[::411, 1]
  
-    for i in range(len(estaciones)):
-        if i % 2 == 0:
-            line = estaciones[i]
-            meta = line.partition("-")                    
-            nombre = meta[0].strip()
-            numero = meta[2].strip()
-            inst.append(nombre)            
-            inst.append(numero)
-        else:
-            line = estaciones[i]
-            #print(line)
-            
-            pos = line.split(" ")            
-            pos = [float(val.strip()) for val in pos]
-            #pos = [val.strip() for val in pos]
-            inst.append(pos)
-            data.append(inst)
-            inst = []
-                    
-    return data
-    """  
+    for punto in grid1:
+        i = np.searchsorted(valores_columnas, punto[1][0]) # columna
+        j = np.searchsorted(valores_filas, punto[1][1]) # fila  
 
-    for i in range(len(estaciones)):
-        if i % 2 != 0:
-            print(estaciones[i]) 
-    """ 
+        p1 = sispi_indice(j, i)     # El punto donde el valor se mantiene ordenado tanto por las columnas como las filas 
+        p2 = sispi_indice(j, i+1)   # El punto proximo a la derecha
+        p3 = sispi_indice(j+1, i)   # El punto abajo
+        p4 = sispi_indice(j+1, i+1) # El punto abajo a la derecha
 
+        for i in p1, p2, p3, p4:  # Encuentra el mas cercano y guarda el indice
+            p = grid2[i]
+            d = math.sqrt(pow((punto[1][0] - p[0]), 2) + (pow((punto[1][1] - p[1]), 2)))           
 
-d = read_estaciones()
-write_serialize_file(d, "estaciones")
-"""
-string = ["Cabo San Antonio - 310", "338.1124215634458 -84.95144722222223 21.86636944444445"]
-meta = string[0].partition("-")
-nombre = meta[0]
-numero = meta[2].lstrip()
-pos = list(string[1].split(" "))
+            if d < distancia: # Actualiza el id de la estacion mas cercana al punto de Sispi
+                distancia = d               
+                indice = i    
 
+            v = (punto[0], indice, distancia)
+        interpolacion.append(v)
+    
+    return interpolacion
 
-print(nombre)
-print(numero)
-print(type(pos[0]))
-"""
+# Realiza la interpolacion entre Sispi y las estaciones
+def interpolar_sispi_estaciones():   
+    est_data, valores = [], []
+
+    estaciones = np.array(read_serialize_file("estaciones"))
+    sispi = np.array(read_serialize_file("sispi"))
+   
+    for v in estaciones:
+        
+        if v[1] != "":
+            estacion_id = v[1]
+        else: 
+            estacion_id = 0
+
+        pos_long_lat = v[2][1:]
+
+        valores.append(estacion_id)    
+        valores.append(pos_long_lat)
+        est_data.append(valores)
+        valores = []
+    
+    return vecino_mas_cercano2(est_data, sispi)
+    
+a = interpolar_sispi_estaciones()
+write_serialize_file(a, "interpolacion_sispi_estaciones")
