@@ -9,6 +9,7 @@ from os import listdir, scandir, getcwd
 from os.path import abspath
 from files.netcdf import*
 from pickle import dump, dumps, load, loads
+from shutil import rmtree
 
 
 SISPI_DIR = "/mnt/cfa_wharehouse/sispi"
@@ -52,13 +53,13 @@ def uncompress(file, dir):
 class Thread_Sispi_Files(threading.Thread):
 
         def __init__(self, file):
-                threading.Thread.__init__(self)
-                self.file = file  
+            threading.Thread.__init__(self)
+            self.file = file  
 
         def run(self):    
 
             sispi = NetCDF(self.file)            
-            sispi.Variables(["XLONG", "XLAT"])
+            sispi.Variables(["XLONG", "XLAT", "Q2", "T2", "RAINC", "RAINNC"])
 
             new_dir = self.file.split("/")
             new_dir = new_dir[5].__str__() + "/" + new_dir[6].__str__() + ".dat" 
@@ -69,8 +70,8 @@ class MyThread(threading.Thread):
     def __init__(self, file):
         threading.Thread.__init__(self)
         self.file = file
-        new_dir = self.file.split("/")[-1][:-7].__str__() + '/'
-        self.dir = os.path.join(SISPI_OUTPUT_DIR, new_dir)
+        self.new_dir = self.file.split("/")[-1][:-7].__str__() + '/'
+        self.dir = os.path.join(SISPI_OUTPUT_DIR, self.new_dir)
         self.threads = []
 
     def run(self):
@@ -81,15 +82,55 @@ class MyThread(threading.Thread):
         # ---------------------------------------- AKI STA LA DUDA -----------------------------------
         self.threads = [Thread_Sispi_Files(files) for file in sispi_files]
 
+        i, c = 0, 0
+        
         for thread in self.threads:
+            # Voy a lanzar los hilos de 3 en 3. Cuando se lancen 3 se espera a que termine para lanzar los proximos 3. 
+            if c > 2:
+                self.threads[i-1].join()
+                self.threads[i-2].join()
+                self.threads[i-3].join()
+                msg = "Voy por el " + str( float(i/len(self.threads)) * 100) + " %"
+                print(msg)
+                c = 0                               
+                      
             thread.start()
+            
+            c += 1
+            i += 1 
+        rmtree(self.dir)
+        print("He terminado de serializar los wrf del ", self.new_dir)
         # ---------------------------------------- AKI STA LA DUDA -----------------------------------
 
-if __name__ == "__main__":
-    
+def StartSerialization():
+
+
+    return 0
+
     SISPI_FILES = files_list(SISPI_DIR)
 
     file = SISPI_FILES[0]
 
-    t1 = MyThread(file)
-    t1.start()
+    wrf_threads = [MyThread(wrf_tar_gz_file) for wrf_tar_gz_file in SISPI_FILES]
+
+    print(wrf_threads.__len__())
+    
+    i, c = 0, 0
+    
+    for thread in wrf_threads:
+        # Voy a lanzar los hilos de 2 en 2. Cuando se lancen 2 se espera a que termine para lanzar los proximos 2. 
+        if c > 2:
+            wrf_threads[i-1].join()
+            wrf_threads[i-2].join()            
+            c = 0                               
+                    
+        thread.start()
+        c += 1
+        i += 1 
+
+
+if __name__ == "__main__":
+    
+    StartSerialization()
+
+    print("\nTodos los ficheros se han serializado satisfactoriamente. \nBuena suerte en la tesis Ariel. Sigue esforzandote...\n\n")

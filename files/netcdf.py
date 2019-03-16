@@ -8,11 +8,15 @@ class NetCDF():
         
         # Constructor de la clase
         def __init__(self, filename=None, plots_path=None, coord=None, dataset=None):
-
-                self.filename = filename
+                self.filename = filename             
+                try:
+                        self.dataset = nc.Dataset(self.filename, 'r')
+                except FileNotFoundError:
+                        self.dataset = None
+                
+                
                 self.coord = { "long":183, "lat":411 }
-                self.dataset = nc.Dataset(self.filename, 'r')
-                self.var_data = None
+                self.data = None
         
         def Metadata(self):
                 """
@@ -28,14 +32,37 @@ class NetCDF():
                 return self.dataset
         
         # Guarda los datos en un fichero el cual se indica su nombre
-        def SaveToFile(self, filename):                
-                if not os.path.exists(filename):
-                        os.mkdir(filename[:filename.rfind('/')+1])
-                with open(filename, "wb") as f:
-                        dump(self.var_data, f, protocol=2)
+        def SaveToFile(self, filename, add_metadata=False):
+                if filename.find("/") == -1:
+                        with open(filename, "wb") as f:
+                                dump(self.data, f, protocol=2)
+                else:
+                        if not os.path.exists(filename):  
+                                try:                              
+                                        os.mkdir(filename[:filename.rfind('/')+1])
+                                        if add_metadata == False:
+                                                with open(filename, "wb") as f:
+                                                        dump(self.data, f, protocol=2)
+                                        else:
+                                                data = {"date": self.dataset.START_DATE, 
+                                                        "data": self.data,
+                                                }
+                                                with open(filename, "wb") as f:
+                                                        dump(data, f, protocol=2)
+                                except FileExistsError:
+                                        if add_metadata == False:
+                                                with open(filename, "wb") as f:
+                                                        dump(self.data, f, protocol=2)
+                                        else:
+                                                data = {"date": self.dataset.START_DATE, 
+                                                        "data": self.data,
+                                                }
+                                                with open(filename, "wb") as f:
+                                                        dump(data, f, protocol=2)
+                
 
         # Carga los datos desde un fichero el cual se indica su nombre. Los datos son devueltos
-        def LoadFromFile(self, filename):
+        def LoadFromFile(self, filename):             
                 with open(filename, "rb") as f:
                         self.dataset = load(f)
         
@@ -59,29 +86,28 @@ class NetCDF():
                 values = []
                 data = []
                 d = dict()
-                
-                for x in range(self.coord['long']):
-                        for y in range(self.coord['lat']):                                 
-                                if get_as == "list":
-                                        for var in var_list:
-                                                val = self.dataset.variables[var][0][x][y]
-                                                values.append(val)
-                                        data.append(values)                                
-                                        values = []    
-                                elif get_as == "dict":
-                                        for var in var_list:
-                                                val = self.dataset.variables[var][0][x][y]
-                                                d.update({var: val})      
-                                        values.append(d)                                                                                                               
-                                        d = {}
-                                else:
-                                        pass                         
+                                        
                 if get_as == "list":
-                        self.var_data = data
-                        return self.var_data
+                        for x in range(self.coord['long']):
+                                for y in range(self.coord['lat']):                                 
+                                        if get_as == "list":
+                                                for var in var_list:
+                                                        val = self.dataset.variables[var][0][x][y]
+                                                        values.append(val)
+                                                data.append(values)                                
+                                                values = [] 
+                        self.data = data                        
+                        
                 elif get_as == "dict":
-                        self.var_data = values
-                        return {self.dataset.START_DATE: self.var_data}
+                        for x in range(self.coord['long']):
+                                for y in range(self.coord['lat']):                                 
+                                        if get_as == "list":
+                                                for var in var_list:
+                                                        val = self.dataset.variables[var][0][x][y]
+                                                        d.update({var: val})      
+                                                values.append(d)                                                                                                               
+                                                d = {}
+                        self.data = {self.dataset.START_DATE: values}                         
                 else:
                         pass
 
