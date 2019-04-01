@@ -58,9 +58,7 @@ class Thread_Sispi_Files(threading.Thread):
             threading.Thread.__init__(self)
             self.file = file  
 
-        def run(self):    
-            msg = "Leyendo el fichero " + self.file
-            print(msg)
+        def run(self): 
             sispi = NetCDF(self.file)            
             sispi.Variables(["Q2", "T2", "RAINC", "RAINNC"])
 
@@ -91,9 +89,6 @@ class MyThread(threading.Thread):
                 self.threads[i-3].join()
                 self.threads[i-2].join()
                 self.threads[i-1].join()
-                
-                msg = "Estado de " + self.new_dir + "---------------- " + str(float(i/len(self.threads)) * 100) + " %"
-                print(msg)
                 c = 0  
              
             thread.start()
@@ -101,7 +96,7 @@ class MyThread(threading.Thread):
             c += 1
             i += 1 
         rmtree(self.dir)
-        print("He terminado de serializar los wrf del ", self.new_dir)
+        
         # ---------------------------------------- AKI STA LA DUDA -----------------------------------
 
 def StartSerialization():
@@ -114,6 +109,8 @@ def StartSerialization():
     
     for thread in wrf_threads:
         if c > 4:
+            msg = "Progreso---------------------------------- " + str(float(i/len(wrf_threads)) * 100) + " %"
+            print(msg)
             wrf_threads[i-5].join()  
             wrf_threads[i-4].join()  
             wrf_threads[i-3].join()  
@@ -127,8 +124,15 @@ def StartSerialization():
         
 if __name__ == "__main__":
 
-    dirs = 
-    
+    serialized = listdir(SISPI_SERIALIZED_OUTPUT_DIR)
+    SISPI_FILES = files_list(SISPI_DIR)
+
+    serialized = [SISPI_DIR + "/" + file + ".tar.gz" for file in serialized]
+ 
+    for file in serialized:
+        if file in SISPI_FILES:       
+            SISPI_FILES.remove(file)
+
     StartSerialization()
 
     print("\nTodos los ficheros se han serializado satisfactoriamente. \nBuena suerte en la tesis Ariel. Sigue esforzandote...\n\n")

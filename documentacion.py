@@ -25,7 +25,21 @@ from tensorflow import keras
 # Operaciones sobre SisPI (wrf)
 
 sispi = NetCDF("wrfout_d03")
-print(sispi.Variables(["Q2", "T2", "RAINC", "RAINNC"]))
+sispi.Variables(["Q2", "T2", "RAINC", "RAINNC"])
+print("Var Q2")
+print(sispi.data["Q2"], "\n\n")
+
+print("Var T2")
+print(sispi.data["T2"], "\n\n")
+
+print("Var RAINC")
+print(sispi.data["RAINNC"], "\n\n")
+
+
+print("Var RAINC")
+print(sispi.data["RAINNC"], "\n\n")
+
+print("The shape is ", sispi.data["RAINNC"].shape)
 #sispi.SaveToFile("/home/maibyssl/Ariel/rain/proyecto/outputs/wrf_prueba")
 
 # Operaciones sobre Observaciones (csv)
