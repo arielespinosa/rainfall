@@ -4,22 +4,51 @@ import re
 import tarfile
 import bz2
 from os import path, listdir
+from os.path import abspath
 import shutil
+from os import scandir
+from pickle import dump, load
 
 
-def files_queue(self): 
-        for ruta, directorios, archivos in os.walk(self.CMORPH["DIR"], topdown=True):                 
-                for archivo in archivos:
-                        self.CMORPH["FILES_QUEUE"].append(archivo)     
-                                
-        """
-        match = re.match(self.CMORPH["REG_EXPRESS"], self.CMORPH["FILE"])       
-        folder_name = str(match.groups(0))  
+# Write a data structure in serialized binary file
+def write_serialize_file(data, file):
+    with open(file, "wb") as f:
+        dump(data, f, protocol=2)
 
-        self.FILE_PATH = CMORPH["DIR"] + "/" + folder_name + "/"
 
-        self.CMORPH["FILE"] = self.CMORPH["FILES_QUEUE"][0]
-        """
+# Read a serialized binary file
+def read_serialize_file(file):
+    with open(file, "rb") as f:
+        return load(f)
+
+
+# Return a list of files from a directory
+def files_list(dir, searchtopdown=False):
+        if not searchtopdown:
+                return [abspath(file.path) for file in scandir(dir) if file.is_file()]
+        else:
+                files_list = []
+                for path, directories, files in os.walk(dir, topdown=searchtopdown):                                         
+                        for file in files:
+                                files_list.append(os.path.join(path, file))     
+                return files_list
+
+# Rename all sispi serialized outputs files in all directories of a root directory 
+# Remove ":" and concatenate year-month-day-hour like CMORPH output files
+def rename_sispi(sispi_root_dir):  
+    sispi_files = files_list(sispi_root_dir, searchtopdown=True)
+
+    for file in sispi_files:  
+        path = file[:file.rindex("/")]
+        new_file = file.split("/")[-1].split(":")[0].replace("-", "")
+        new_file = new_file[:19] + new_file[-2:] + ".dat"
+
+        if path.split("_")[-1][:-2] not in new_file:        
+            os.remove(file)
+        else:
+            new_file = os.path.join(path, new_file)
+            os.rename(file, new_file)
+
 
 def ficheros_cmorph_comprimidos(cmorph):  
         for ruta, directorios, archivos in os.walk(self.FILE_PATH, topdown=True):                 

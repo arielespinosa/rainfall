@@ -50,15 +50,18 @@ class CMORPH():
                 self.LEFT     = -86
                 self.RIGHT    = -74
 
-                self.filename =  filename               
-                self.dataset  =  dataset  
+                self.filename =  filename                
 
-                if self.filename != None and self.filename[-4:] != ".dat":              
-                        self.date =  self.filename.split("_")[-1]                
-                        self.date = datetime(int(self.date[:4]), int(self.date[4:6]), int(self.date[6:8]), int(self.date[8:]))
-                else:
-                        self.date = date
-            
+                if self.filename != None and self.filename[-4:] != ".dat":
+                        try:    
+                                self.dataset  =  dataset 
+                                self.date =  self.filename.split("_")[-1]                
+                                self.date = datetime(int(self.date[:4]), int(self.date[4:6]), int(self.date[6:8]), int(self.date[8:]))
+                        except ValueError:
+                                self.date = date
+                elif self.filename != None and self.filename[-4:] == ".dat":
+                       self.LoadFromFile(self.filename)
+
 
         def Read(self):                
                 dataset = []

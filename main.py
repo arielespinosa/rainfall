@@ -11,18 +11,13 @@ from files.netcdf import*
 from pickle import dump, dumps, load, loads
 from shutil import rmtree
 import collections
+from preprocess.files import files_list
 
 # Se dispone de 12 procesadores Intel Xeon cada uno soporta 16 hilos
 
 SISPI_DIR = "/mnt/cfa_wharehouse/sispi"
 SISPI_OUTPUT_DIR = "/home/maibyssl/Ariel/sispi_output"
 SISPI_SERIALIZED_OUTPUT_DIR = "/home/maibyssl/Ariel/rain/proyecto/outputs/sispi"
-
-
-def files_list(dir):
-    #SISPI_FILES = [arch.name for arch in Path(ruta).iterdir() if arch.is_file()]
-    #return [abspath(arch.path) for arch in listdir(SISPI_DIR)]
-    return [abspath(arch.path) for arch in scandir(dir) if arch.is_file()] #  """ and arch.name != script.py """]
 
 def createstructure(self, file, dir):
     self._makedirs(self._listdirs(file), dir)

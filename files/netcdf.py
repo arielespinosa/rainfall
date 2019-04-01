@@ -9,15 +9,19 @@ class NetCDF():
         # Constructor de la clase
         def __init__(self, filename=None, plots_path=None, coord=None, dataset=None):
 
-                self.filename = filename             
-                try:
-                        self.dataset = nc.Dataset(self.filename, 'r')
-                except FileNotFoundError:
-                        self.dataset = None
-                
-                
+                self.filename = filename  
                 self.coord = { "long":183, "lat":411 }
-                self.data = None
+                self.data = None  
+        
+                if self.filename != None and self.filename[-4:] != ".dat":
+                        try:    
+                                self.dataset = nc.Dataset(self.filename, 'r')
+                                
+                         
+                        except ValueError or FileNotFoundError:
+                                pass
+                elif self.filename != None and self.filename[-4:] == ".dat":
+                       self.LoadFromFile(self.filename)
         
         def Metadata(self):
                 """
@@ -28,9 +32,6 @@ class NetCDF():
                 date_object = datetime_object.date()
                 """
                 return self.dataset.START_DATE
-
-        def Dataset(self):                          
-                return self.dataset
         
         # Guarda los datos en un fichero el cual se indica su nombre
         def SaveToFile(self, filename, add_metadata=False):
@@ -83,11 +84,9 @@ class NetCDF():
         # Devuelve un dataset con las variables solicitadas en el parametro var_list
         # Cada elemento de la fila devuelta corresponde a los puntos de la 1ra fila, 
         # luego a la 2da, 3ra y asi sucesivamente
-        def Variables(self, var_list, get_as="list"):                
+        def Vars(self, var_list, get_as="list"):                
                 values = []
                 data = []
-                d = dict()
-                data = dict()
                                         
                 if get_as == "list":
                         for x in range(self.coord['long']):
@@ -101,6 +100,9 @@ class NetCDF():
                         self.data = data                        
                         
                 elif get_as == "dict":
+                        d = dict()
+                        data = dict()
+
                         for x in range(self.coord['long']):
                                 for y in range(self.coord['lat']):                                 
                                         if get_as == "list":
