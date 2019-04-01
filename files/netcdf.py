@@ -8,6 +8,7 @@ class NetCDF():
         
         # Constructor de la clase
         def __init__(self, filename=None, plots_path=None, coord=None, dataset=None):
+
                 self.filename = filename             
                 try:
                         self.dataset = nc.Dataset(self.filename, 'r')
@@ -43,12 +44,12 @@ class NetCDF():
                                         if add_metadata == False:
                                                 with open(filename, "wb") as f:
                                                         dump(self.data, f, protocol=2)
-                                        else:
-                                                data = {"date": self.dataset.START_DATE, 
-                                                        "data": self.data,
-                                                }
+                                        else:   
+                                                data = { "date": self.dataset.START_DATE }
+                                                data.update(self.data)
                                                 with open(filename, "wb") as f:
                                                         dump(data, f, protocol=2)
+                                                
                                 except FileExistsError:
                                         if add_metadata == False:
                                                 with open(filename, "wb") as f:
@@ -86,6 +87,7 @@ class NetCDF():
                 values = []
                 data = []
                 d = dict()
+                data = dict()
                                         
                 if get_as == "list":
                         for x in range(self.coord['long']):
@@ -111,5 +113,12 @@ class NetCDF():
                 else:
                         pass
 
-
+        
+        def Variables(self, var_list):                
+                data = dict()
+                for var in var_list:                         
+                        var_key = dict({var: self.dataset.variables[var][:]})      
+                        data.update(var_key)                                                                                                           
+                        del var_key
+                self.data = data
 

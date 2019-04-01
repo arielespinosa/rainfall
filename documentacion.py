@@ -4,8 +4,10 @@ from files.cmorph import*
 import numpy as np
 import pandas as pd
 from datetime import datetime
-
-
+import tarfile
+import bz2
+import os
+from tensorflow import keras
 
 #try:
 #    os.mkdir("/home/maibyssl/Ariel/rain/proyecto/outputs/sispi/sispi2/")
@@ -22,14 +24,9 @@ from datetime import datetime
 
 # Operaciones sobre SisPI (wrf)
 
-#sispi = NetCDF("wrfout_d03")
-#sispi.Variables(["XLONG", "XLAT", "Q2", "T2", "RAINC", "RAINNC"])
-#sispi.Variables(["XLONG", "XLAT", "Q2", "T2", "RAINC", "RAINNC"])
-#sispi.SaveToFile("/home/maibyssl/Ariel/rain/proyecto/outputs/sispi/prueba_sispi", add_metadata=True)
-#sispi = NetCDF()
-#sispi.LoadFromFile("prueba_sispi")
-#print(sispi.dataset["data"])
-
+sispi = NetCDF("wrfout_d03")
+print(sispi.Variables(["Q2", "T2", "RAINC", "RAINNC"]))
+#sispi.SaveToFile("/home/maibyssl/Ariel/rain/proyecto/outputs/wrf_prueba")
 
 # Operaciones sobre Observaciones (csv)
 #obs = Observations("observaciones.csv")
@@ -37,3 +34,15 @@ from datetime import datetime
 #print(obs.PrepareData(file_to_save="outputs/stations_obs_data.dat"))
 
 # Operaciones sobre CMORPH (binary)
+
+
+
+#uncompress(file1, dir1)
+#cmorph = CMORPH(file1)
+#cmorph = CMORPH("CMORPH_V1.0_ADJ_8km-30min_2017010100")
+#cmorph.Read()
+#print(cmorph.dataset)
+#cmorph.SaveToFile("cmorph.dat", add_metadata=True)
+#cmorph.LoadFromFile("cmorph.dat")
+#print(cmorph.dataset["data"])
+
