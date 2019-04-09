@@ -15,9 +15,7 @@ class NetCDF():
         
                 if self.filename != None and self.filename[-4:] != ".dat":
                         try:    
-                                self.dataset = nc.Dataset(self.filename, 'r')
-                                
-                         
+                                self.dataset = nc.Dataset(self.filename, 'r')                         
                         except ValueError or FileNotFoundError:
                                 pass
                 elif self.filename != None and self.filename[-4:] == ".dat":
@@ -60,13 +58,13 @@ class NetCDF():
                                                         "data": self.data,
                                                 }
                                                 with open(filename, "wb") as f:
-                                                        dump(data, f, protocol=2)
-                
+                                                        dump(data, f, protocol=2)          
 
         # Carga los datos desde un fichero el cual se indica su nombre. Los datos son devueltos
         def LoadFromFile(self, filename):             
                 with open(filename, "rb") as f:
                         self.dataset = load(f)
+                        self.data    = self.dataset 
         
         def XLONG(self):
                 return np.array(self.dataset["XLONG"][0][0])
@@ -81,7 +79,7 @@ class NetCDF():
                 return [longitud, latitud]
 
         
-        # Devuelve un dataset con las variables solicitadas en el parametro var_list
+        # Devuelve un dataset con las variables solicitadas en el parametro var_list.
         # Cada elemento de la fila devuelta corresponde a los puntos de la 1ra fila, 
         # luego a la 2da, 3ra y asi sucesivamente
         def Vars(self, var_list, get_as="list"):                
@@ -114,8 +112,9 @@ class NetCDF():
                         self.data = {self.dataset.START_DATE: values}                         
                 else:
                         pass
-
-        
+      
+        # Devuelve un diccionario con las variables solicitadas en el parametro var_list.
+        # Es una mejora del metodo Vars
         def Variables(self, var_list):                
                 data = dict()
                 for var in var_list:                         
@@ -123,4 +122,41 @@ class NetCDF():
                         data.update(var_key)                                                                                                           
                         del var_key
                 self.data = data
+
+                return self.data
+        
+        # Devuelve en forma de diccionario los valores minimos y maximos
+        # del las variables que se leen del fichero  
+        def MinMaxValues(self):
+                data = dict()
+
+                for key in self.data.keys():
+                        var_key = dict({ key:{"min": np.amin(self.dataset[key]), "max":np.amax(self.dataset[key])} })      
+                        data.update(var_key)                                                                                                           
+                        del var_key
+
+                return data
+        
+        def StackData(self):
+                """ 
+                data = None
+                for key in self.data.keys():
+                        if data is not None and data != key:
+                                data = np.dstack((data, self.dataset[key]))
+                                print(key)
+                                continue
+                        
+                        data = key
+                        print(data)
+                         
+                        if data is not None:
+                                data = np.dstack((data, self.dataset[key]))
+                                continue
+                        data = np.dstack(self.dataset[key])
+                """
+                a = np.reshape(np.array(self.dataset["RAINC"]), (183, 411))
+                b = np.reshape(np.array(self.dataset["T2"]), (183, 411))
+
+                print(a.shape)
+                return np.concatenate((a, b), axis=1)
 
