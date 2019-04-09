@@ -1,6 +1,7 @@
 #header=None
 from pickle import dump, dumps, load, loads
 from datetime import datetime
+import pytz
 import pandas as pd
 
 class Observations():
@@ -8,7 +9,15 @@ class Observations():
     def __init__(self, filename=None, dataset=None):
         self.filename = filename
         self.dataset = dataset
-        self.stations = pd.read_csv(self.filename, sep=',')
+        tz_cuba = pytz.timezone('America/Bogota')
+
+        if self.filename != None and self.filename[-4:] == ".csv":
+            try:    
+                self.stations = pd.read_csv(self.filename, sep=',')                         
+            except ValueError or FileNotFoundError:
+                pass
+        elif self.filename != None and self.filename[-4:] == ".dat":
+                self.LoadFromFile(self.filename)
 
     def Read(self):
         return pd.read_csv(self.filename, sep=',')
@@ -50,7 +59,6 @@ class Observations():
                         if dt == datetime(year=2017, month=1, day=31, hour=8):
                             e = {data[0].__str__():days}
                             stations.update(e)
-
                 else:
                     i=0
             i+=1
@@ -60,9 +68,11 @@ class Observations():
 
         return stations
 
-
-    def GetStationObservation(self, station_id):
+    # Pass by reference "all" for get all observation of a station
+    def GetStationObservation(self, station_id, days=None):
         return self.dataset[station_id]
+
+                
 
 
 

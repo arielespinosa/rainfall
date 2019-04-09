@@ -23,14 +23,22 @@ def read_serialize_file(file):
 
 
 # Return a list of files from a directory
-def files_list(dir, searchtopdown=False):
+def files_list(dir, searchtopdown=False, name_condition=False):
         if not searchtopdown:
-                return [abspath(file.path) for file in scandir(dir) if file.is_file()]
+                if not name_condition:
+                        return [abspath(file.path) for file in scandir(dir) if file.is_file()]
+                else:
+                        return [abspath(file.path) for file in scandir(dir) if file.is_file() and name_condition in file.name]
         else:
                 files_list = []
                 for path, directories, files in os.walk(dir, topdown=searchtopdown):                                         
                         for file in files:
-                                files_list.append(os.path.join(path, file))     
+                                if not name_condition:
+                                        files_list.append(os.path.join(path, file))
+                                elif name_condition in file.name:
+                                        files_list.append(os.path.join(path, file))
+                                else:
+                                        pass
                 return files_list
 
 # Rename all sispi serialized outputs files in all directories of a root directory 
