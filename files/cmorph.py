@@ -4,11 +4,15 @@
     binarios tienen 6 bloques, el primero y el cuarto traen los valores de precipitacion de la primera y la
     segunda media hora del plazo. El script se invoca con el nombre del archivo binario CMORPH como argumento
     y la salida es por la consola.
-
     python CmorphXYZ.py nombre_fichero_cmorph """
 
 import numpy as np
 import sys
+from pickle import dump, dumps, load, loads
+import os
+from os import listdir, scandir, getcwd
+from os.path import abspath
+from datetime import datetime
 
 # valores iniciales e incrementos por latitud y longitud
 # de los datos de CMORPH (-60 - 60 Lat y 360 Long)
@@ -40,20 +44,28 @@ RIGHT   = -74
 class CMORPH():
 
          # Constructor de la clase
-        def __init__(self, filename=None, dataset=None):
+        def __init__(self, filename=None, dataset=None, date=None):
+                self.TOP      =  25                                                    
+                self.BOTTOM   =  19
+                self.LEFT     = -86
+                self.RIGHT    = -74
 
-                self.filename = filename               
-                self.dataset = dataset
+                self.filename =  filename                
 
-                self.TOP     = 25                                                    
-                self.BOTTOM  = 19
-                self.LEFT    = -86
-                self.RIGHT   = -74
+                if self.filename != None and self.filename[-4:] != ".dat":
+                        try:    
+                                self.dataset  =  dataset 
+                                self.date =  self.filename.split("_")[-1]                
+                                self.date = datetime(int(self.date[:4]), int(self.date[4:6]), int(self.date[6:8]), int(self.date[8:]))
+                        except ValueError:
+                                self.date = date
+                elif self.filename != None and self.filename[-4:] == ".dat":
+                       self.LoadFromFile(self.filename)
+
 
         def Read(self):                
                 dataset = []
-                #data1, data2 = 0, 0
-                
+                #data1, data2 = 0, 0               
                 
                 # Abrir el fichero CMORPH
                 #try:                
@@ -99,14 +111,56 @@ class CMORPH():
                        
                 # Devolver el dataset  
                 # columnas = 756 [0 - 755] ; filas = 482 [ ]                              
-                self.dataset = dataset
-                return self.dataset
+                self.dataset = dataset                
 
         def Dataset(self):
                 return self.dataset       
         
         def OnlyLatLong(self):                          
                 return np.delete(self.dataset, 2, axis=1) 
+
+        # Guarda los datos en un fichero el cual se indica su nombre
+        def SaveToFile(self, filename, add_metadata=False):
+                if filename.find("/") == -1:
+                        if add_metadata == False:
+                                with open(filename, "wb") as f:
+                                        dump(self.dataset, f, protocol=2)
+                        else:
+                               
+                                data = {"date": self.date, 
+                                        "data": self.dataset,
+                                }
+                                with open(filename, "wb") as f:
+                                        dump(data, f, protocol=2)
+                else:
+                        if not os.path.exists(filename):  
+                                try:                              
+                                        os.mkdir(filename[:filename.rfind('/')+1])
+                                        if add_metadata == False:
+                                                with open(filename, "wb") as f:
+                                                        dump(self.dataset, f, protocol=2)
+                                        else:
+                                                data = {"date": self.date, 
+                                                        "data": self.dataset,
+                                                }
+                                                with open(filename, "wb") as f:
+                                                        dump(data, f, protocol=2)
+                                except FileExistsError:
+                                        if add_metadata == False:
+                                                with open(filename, "wb") as f:
+                                                        dump(self.data, f, protocol=2)
+                                        else:
+                                                data = {"date": self.date, 
+                                                        "data": self.dataset,
+                                                }
+                                                with open(filename, "wb") as f:
+                                                        dump(data, f, protocol=2)
+                
+
+        # Carga los datos desde un fichero el cual se indica su nombre. Los datos son devueltos
+        def LoadFromFile(self, filename):             
+                with open(filename, "rb") as f:
+                        self.dataset = load(f)
 
         def Imprimir(self):
                 print("%7.2f, %6.2f, %5.1f"%(lon, lat, A))

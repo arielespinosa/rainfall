@@ -49,7 +49,7 @@ class MultiLayerPerceptron():
 		self.num_inputs=parameters["num_inputs"]
 		self.name = "mlp_model"
 	
-	def create_model():
+	def create_model(self):
 		if np.isscalar(self.dense_units):
 			dense_units = (self.dense_units, )
 		else:
@@ -63,7 +63,7 @@ class MultiLayerPerceptron():
 		for units in dense_units:
 			x = Dense(
 				self.units,
-				activation='linear',
+				activation=self.h_activation,
 				kernel_initializer=self.kernel_initializer)(x)
 			if antirectifier:
 				x = Antirectifier()(x)

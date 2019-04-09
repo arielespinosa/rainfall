@@ -3,19 +3,35 @@ from files.netcdf import*
 from files.cmorph import*
 import numpy as np
 import pandas as pd
+from datetime import datetime
+import tarfile
+import bz2
+import os
+from tensorflow import keras
+from preprocess.files import *
 
-# Operaciones sobre SisPI (wrf)
-"""
-sispi = NetCDF("wrfout_d03")
-n = np.array(sispi.dataset["XLAT"][0][:, 0])
-"""
+DATA_DIR = "/home/maibyssl/Ariel/rain/proyecto/outputs/sispi"
 
-# Operaciones sobre Observaciones (csv)
-obs = Observations("observaciones.csv")
-obs.LoadFromFile("outputs/stations_obs_data.dat")
-#print(obs.PrepareData(file_to_save="outputs/stations_obs_data.dat"))
+def encontrar():
+    for file in files_list(DATA_DIR, searchtopdown=True):
+        sispi = read_serialize_file(file)
 
-print(obs.GetStationObservation("78342"))
-#asd
+        try:
+            rainc  = sispi["data"]["RAINC"]
+            rainnc = sispi["data"]["RAINNC"]
+        except KeyError or TypeError:                    
+            rainc  = sispi["data"]["RAINC"]
+            rainnc = sispi["data"]["RAINNC"]
+  
+                     
+        # Add all rain in sispi file
+        rainc  = np.asmatrix(rainc)
+        rainnc = np.asmatrix(rainnc)
+        rain   = rainc + rainnc
+        rain   = np.asarray(rain)
+        rain   = np.reshape(rain, (183,411))
+        print(np.amax(rain))
 
-# Operaciones sobre CMORPH (binary)
+        return 0
+
+encontrar()
