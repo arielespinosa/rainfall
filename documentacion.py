@@ -12,7 +12,6 @@ from preprocess.files import *
 from datetime import datetime
 import pytz
 
-
 def encontrar():
     tz_cuba = pytz.timezone('America/Bogota')
     tz_GMT0 = pytz.timezone('Etc/GMT-0')
@@ -37,19 +36,12 @@ def encontrar():
         del data
 
     return data_stations
-    
-            
-    #print(obs["78337"])
 
-    
-    #observation_date = tz_cuba.localize(datetime.strptime("2017-05-06-22", "%Y-%m-%d-%H"))
-    #print(observation_date)    
-    #print(observation_date.astimezone(tz_GMT0))
+def observacion():
+    obs = Observations("outputs/observaciones.csv")
+    print("Hecho!")
+ 
+#encontrar()
 
-encontrar()
-
-#s = "2017-05-06"
-
-#print(s.replace("-",""))
-
+observacion()
 

@@ -5,10 +5,9 @@ from shutil import rmtree
 import collections
 from preprocess.files import files_list, read_serialize_file, write_serialize_file
 import numpy as numpy
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
-
-DATA_DIR = "/home/maibyssl/Ariel/rain/proyecto/outputs/dataset"
+from config import *
 
 def convert_stations_to_utc(filename=None):   
     tz_cuba = pytz.timezone('America/Bogota')
@@ -85,14 +84,24 @@ def get_min_max_values():
 
     return results
 
+def missing_sispi_files():
+    actual_date = datetime(year = 2017, month = 1, day = 1)
+    existing_files = [file.split("_")[-1].split(".")[0] for file in files_list(DATA_DIR)]
+    cant = 0
+    
+    for file in existing_files:          
+        date = "%04d%02d%02d%02d" % (actual_date.year, actual_date.month, actual_date.day, actual_date.hour)
+
+        if date not in existing_files:
+            cant += 1
+        
+        actual_date += timedelta(hours=1)
+
+    return cant
+        
 
 def standar_desviation():
     pass
 
 
-
-
-#convert_stations_to_utc(filename = "outputs/stations_obs_data_utc.dat")
-
-obs = read_serialize_file("outputs/stations_obs_data_utc.dat")
-print(obs.keys())
+print(missing_sispi_files())

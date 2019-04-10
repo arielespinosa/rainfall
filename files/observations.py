@@ -9,7 +9,8 @@ class Observations():
     def __init__(self, filename=None, dataset=None):
         self.filename = filename
         self.dataset = dataset
-        tz_cuba = pytz.timezone('America/Bogota')
+        self.tz_cuba = pytz.timezone('America/Bogota')
+        self.tz_GMT0 = pytz.timezone('Etc/GMT-0')
 
         if self.filename != None and self.filename[-4:] == ".csv":
             try:    
@@ -21,6 +22,9 @@ class Observations():
 
     def Read(self):
         return pd.read_csv(self.filename, sep=',')
+
+    def Esta(self):
+        return self.stations
 
     def ReadColums(self):        
         d = pd.read_csv(self.filename)
@@ -68,9 +72,45 @@ class Observations():
 
         return stations
 
-    # Pass by reference "all" for get all observation of a station
-    def GetStationObservation(self, station_id, days=None):
-        return self.dataset[station_id]
+    def Stations(self):
+        return self.stations.Estacion.unique()
+
+    # Get all observation from a station where rainfall is not emtpy
+    def GetStationObservation(self, station_id, nan_values=False, utc=True):
+        
+        # Converting pandas.DataFrame to numpy.array and removing "Estaciones" colummn
+        data = self.stations[(self.stations['Estacion'] == station_id) & (self.stations['RR'].notna())].to_numpy()[:, 1:]
+        dict_observations = dict()
+        date = ""
+
+        for i in range(len(data)):
+            date = str(int(data[i, 0])) + "-" + str(int(data[i, 1])) + "-" + str(int(data[i, 2])) + "-"             
+
+            # Converting identificator in observation to local hour
+            hour = int(data[i, 3])
+            hour = hour * 2 + hour - 2
+            
+            # Converting local hour to UTC
+            observation_date = self.tz_cuba.localize(datetime.strptime(date + str(hour), "%Y-%m-%d-%H")).astimezone(self.tz_GMT0)
+            observation_date = "%04d%02d%02d%02d" % (observation_date.year, observation_date.month, observation_date.day, observation_date.hour)
+            
+            #d = { observation_date : obs[station][date][hour] }
+            dict_observations.update({ observation_date : data[i, 4] })
+        
+            #del d
+        return { station_id: dict_observations }
+        #return data
+    
+    def GetAllStationObservation(self):
+        stations = dict()
+
+        for station_id in self.Stations():
+            stations.update(self.GetStationObservation(station_id))
+
+        self.dataset = stations
+
+        self.SaveToFile("outputs/observaciones_utc_2017.dat")
+ 
 
                 
 
