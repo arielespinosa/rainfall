@@ -11,10 +11,9 @@ from tensorflow import keras
 from preprocess.files import *
 from datetime import datetime
 import pytz
+from config import *
 
 def encontrar():
-    tz_cuba = pytz.timezone('America/Bogota')
-    tz_GMT0 = pytz.timezone('Etc/GMT-0')
     obs     = read_serialize_file("outputs/stations_obs_data.dat")
     data    = dict()
     data_stations = dict()
@@ -25,7 +24,7 @@ def encontrar():
                 print(station, date, hour)
                 h = int(hour.split(":")[0])
                 h = h*2 + h-2
-                observation_date = tz_cuba.localize(datetime.strptime(date + "-" + h.__str__(), "%Y-%m-%d-%H")).astimezone(tz_GMT0)
+                observation_date = TZ_CUBA.localize(datetime.strptime(date + "-" + h.__str__(), "%Y-%m-%d-%H")).astimezone(TZ_GMT0)
                 observation_date = "%04d%02d%02d%02d" % (observation_date.year, observation_date.month, observation_date.day, observation_date.hour)
                 
                 d = { observation_date : obs[station][date][hour] }
@@ -39,9 +38,15 @@ def encontrar():
 
 def observacion():
     obs = Observations("outputs/observaciones.csv")
-    print("Hecho!")
+
+    print(obs.Cant_Missing_Values())
  
 #encontrar()
 
-observacion()
+#observacion()
 
+#x = np.array([[ 1,  2,  3,  4,  5], [ 6,  7,  8,  9, 10], [11, 12, 13, 14, 15]])
+              
+#y = x * 2
+
+#print(np.meshgrid(x, y))

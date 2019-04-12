@@ -72,6 +72,9 @@ class Observations():
 
         return stations
 
+    def Cant_Missing_Values(self):
+        return len(self.stations[(self.stations['RR'].isna())])
+
     def Stations(self):
         return self.stations.Estacion.unique()
 
@@ -94,10 +97,8 @@ class Observations():
             observation_date = self.tz_cuba.localize(datetime.strptime(date + str(hour), "%Y-%m-%d-%H")).astimezone(self.tz_GMT0)
             observation_date = "%04d%02d%02d%02d" % (observation_date.year, observation_date.month, observation_date.day, observation_date.hour)
             
-            #d = { observation_date : obs[station][date][hour] }
             dict_observations.update({ observation_date : data[i, 4] })
-        
-            #del d
+                    
         return { station_id: dict_observations }
         #return data
     

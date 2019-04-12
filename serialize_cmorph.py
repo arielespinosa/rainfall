@@ -11,6 +11,7 @@ from files.cmorph import*
 from pickle import dump, dumps, load, loads
 from shutil import rmtree
 import collections
+from preprocess import *
 
 # Se dispone de 12 procesadores Intel Xeon cada uno soporta 16 hilos
 
@@ -47,10 +48,7 @@ def listdirs(self, file):
     dirs.sort()
     return dirs
 
-def uncompress(file, dir):      
-    os.mkdir(dir)
-    tar = tarfile.open(file, mode='r')
-    tar.extractall(dir)
+
         
 class Thread_Cmorph_Files(threading.Thread):
 
