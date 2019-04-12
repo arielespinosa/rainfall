@@ -61,7 +61,7 @@ class Uncompress_Sispi_Files(threading.Thread):
 
 def StartSerialization(_continue = False):
 
-    SISPI_FILES = files_list(SISPI_DICIEMBRE_DIR)
+    SISPI_FILES = files_list(SISPI_DIR)
 
     # Compare serialized and unserialize directories. Remove serialized files from files list to serialize
     # If is the firs time, its not necessary.
@@ -93,7 +93,4 @@ def StartSerialization(_continue = False):
         i += 1 
         
 if __name__ == "__main__":
-
-    SISPI_FILES = files_list(SISPI_DIR)
-
     StartSerialization()
