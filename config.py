@@ -16,3 +16,7 @@ DATASET_DIR = os.path.join(BASE_DIR, "outputs/dataset")
 # Time Zones
 TZ_CUBA = pytz.timezone('America/Bogota')
 TZ_GMT0 = pytz.timezone('Etc/GMT-0')
+
+
+# Grid Specifications
+SISPI_GRID = { "lat":183, "long":411 }

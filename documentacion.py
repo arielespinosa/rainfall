@@ -12,6 +12,7 @@ from preprocess.files import *
 from datetime import datetime
 import pytz
 from config import *
+import sys
 
 def encontrar():
     obs     = read_serialize_file("outputs/stations_obs_data.dat")
@@ -44,12 +45,3 @@ def observacion():
 #encontrar()
 
 #observacion()
-
-file = "/home/maibyssl/Ariel/rain/d03_2017010100/wrfout_d03_2017-01-02_00:00:00"
-#sispi = NetCDF(file)            
-#sispi.Variables(["RAINC", "RAINNC"])
-
-new_dir = "d_" + file.split("/")[-2].split("_")[-1][:-1] + file.split(":")[0][-1] + ".dat"
-
-print(new_dir)
-#sispi.SaveToFile(os.path.join(SISPI_SERIALIZED_OUTPUT_DIR, new_dir))

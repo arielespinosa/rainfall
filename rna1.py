@@ -45,9 +45,6 @@ def generate_arrays_from_file(path):
         data_RS = []
         data_RC = []
 
-        #print("Data Q2 = ", data_Q2)
-        #time.sleep(4)
-
         for file in files_list(path):            
                 data = read_serialize_file(file)
 
@@ -59,25 +56,12 @@ def generate_arrays_from_file(path):
                 x = {"input_1":np.array(data_Q2), "input_2":np.array(data_T2), "input_3":np.array(data_RS)}
                 y = np.array(data_RC)
 
-                print("Shape of x = ", x["input_1"].shape)
-                time.sleep(4)
-
-                print("Data x = ", x)
-                time.sleep(4)
-
                 yield (x, y)
-
-        print("Shape of x = ", x["input_1"].shape)
-        time.sleep(4)
-
-        print("Data x = ", x)
-        time.sleep(4)
 
         #x = {"input_1":data["Q2"], "input_2":data["T2"], "input_3":data["RS"]}
         #y = data["RC"]
         
         #yield (x, y)
-
 
 def generate_arrays_from_file_tb(files_of_data):
         data_Q2 = []

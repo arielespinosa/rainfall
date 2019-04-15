@@ -48,125 +48,47 @@ class MultiLayerPerceptron():
 		self.num_classes=parameters["num_classes"]
 		self.num_inputs=parameters["num_inputs"]
 		self.name = "mlp_model"
+		self.model = None
 	
-	def create_model(self):
-		if np.isscalar(self.dense_units):
-			dense_units = (self.dense_units, )
-		else:
-			if len(self.dense_units) == 0:
-				raise ValueError('dense_units must be a scalar or a tuple')
+	def create(self):
+		
+		# Input & Hidden Layers 
+		input1 = Input(shape=(11,)) # Q2 var
+        x1     = Dense(28, activation='relu')(input1)
 
-		inputs = Input(shape=(self.num_inputs, ), name='inputs')
+        input2 = Input(shape=(11,)) # T2 var
+        x2     = Dense(28, activation='relu')(input2)
 
-		# Hidden Layers
-		x = inputs
-		for units in dense_units:
-			x = Dense(
-				self.units,
-				activation=self.h_activation,
-				kernel_initializer=self.kernel_initializer)(x)
-			if antirectifier:
-				x = Antirectifier()(x)
-			else:
-				if self.batch_norm:
-					x = BatchNormalization()(x)
-				x = Activation(self.h_activation)(x)
-
-			if self.dropout is not None: 
-				x = dropout(self.dropout_rate)(x)
+        input3 = Input(shape=(11,)) # RS var
+        x3     = Dense(28, activation='relu')(input3)
 
 		# Output Layer
-		x = Dense(self.num_classes)(x)
-		outputs = Activation(self.o_activation)(x)
+		added  = Add()([x1, x2, x3])
+        out    = Dense(11)(added)
 
-		model = Model(inputs=self.inputs, outputs=self.outputs, name=self.name)
+		model = Model(inputs=[input1, input2, input3], outputs=self.outputs, name=self.name)
 		model.compile(loss=self.loss, optimizer=self.optimizer, metrics=['accuracy'])
-		model.summary()
-		return model
+
+		self.model = model
+	
+	def train()
+		pass
+	
+	def evaluate():
+		pass
+
+	def predic():
+		pass
+
+	def save()
+		pass
+
+
+
+
+
 
 """
-# Capsules neural network.
-# Returns a compiled Keras model instance.
-class Capsule():
-
-	def __init__(self, parameters):
-		self.num_capsules=parameters["num_capsules"]
-		self.dim_capsules=parameters["dim_capsules"]
-		self.routings=parameters["routings"]
-		self.activation=parameters["activation"]
-		self.kernel_initializer=parameters["kernel_initializer"]
-		self.optimizer=parameters["optimizer"]
-		self.loss=parameters["loss"]
-		self.share_weights=parameters["share_weights"]
-		self.num_inputs=parameters["num_inputs"]
-		self.num_features=parameters["num_features"]
-		self.num_classes=parameters["num_classes"]
-		self.for_regression=parameters["for_regression"]
-		self.name = "capsule_model"
-		
-	def create_model():
-		inputs = Input(shape=(self.num_inputs, self.num_features))
-
-		capsule = Capsule(
-			self.num_classes,
-			self.dim_capsules,
-			routings=self.routings,
-			share_weights=self.share_weights,
-			activation=self.activation)(inputs)
-		#
-		x = Lambda(lambda z: K.sqrt(K.sum(K.square(z), 2)))(capsule)
-
-		if for_regression:
-			x = Dense(num_classes)(x)
-
-		model = Model(inputs=inputs, outputs=x, name=self.name)
-		model.compile(loss=self.loss, optimizer=self.optimizer, metrics=['accuracy'])
-		model.summary()
-
-		return model
-
-# Radial-Basis-Function neural network.
-# Returns a compiled Keras model instance.    
-class RBF_Regressor():
-
-	def __init__(self, parameters):	
-		self.units=parameters["units"]
-		self.output_activation=parameters["output_activation"]
-		self.kernel_initializer=parameters["kernel_initializer"]
-		self.kernel_activation=parameters["kernel_activation"]
-		self.kernel_constraint=parameters["kernel_constraint"]
-		self.loss=parameters["loss"]
-		self.optimizer=parameters["optimizer"]
-		self.num_inputs=parameters["num_inputs"]	    
-		self.num_classes=parameters["num_classes"]
-		self.for_regression=parameters["for_regression"]
-		self.name = "rbf_model"
-		
-	def create_model():
-		inputs = Input(shape=(self.num_inputs,), name='inputs')
-		# Need to fix some issues for multiple inputs here!!!
-		# for now we use a dense layer to perform a linear
-		# combination of the inputs ...
-		x = Dense(1, activation='linear', use_bias=True)(inputs)
-
-		# a single RBF layer would do, dont dare to use more (better wide than deep)
-		x = RBFlayer(self.units, 
-			kernel_activation=self.kernel_activation,
-			kernel_initializer=self.kernel_initializer)(x)
-
-		# perform a linear combination of RBF outputs, no need for bias here
-		# (see later for convexity constraint !!)
-		x = Dense(self.num_classes, use_bias=False)(x)
-		output = Activation(self.output_activation)(x)
-
-		model = Model(inputs=self.inputs, outputs=self.output, name=self.name)
-		model.compile(loss=self.loss, optimizer=self.optimizer)
-		model.summary()
-
-		return model
-
-# Long-Short-Tensor-Memory (LSTM) neural network.
-# Returns a compiled Keras model instance. 
 class LSTM():
 
 	def __init__(self, parameters):	
