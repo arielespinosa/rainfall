@@ -8,6 +8,8 @@ from os.path import abspath
 import shutil
 from os import scandir
 from pickle import dump, load
+from datetime import datetime, timedelta
+import pytz
 
 
 # Write a data structure in serialized binary file
@@ -18,19 +20,64 @@ def write_serialize_file(data, file):
 
 # Read a serialized binary file
 def read_serialize_file(file):
-    with open(file, "rb") as f:
-        return load(f)
+        with open(file, "rb") as f:
+                return load(f)
 
+# Change name of sispi nc files from "wrfout_d03_2017-01-01_00:00:00" to "2017010100"
+def change_sispi_nc_files_names(filename, tar=False):
+        if tar:
+                return filename.split("/")[-1].split("_")[-1][:8]
+
+        return filename.split("_")[-2].replace("-", "") + filename.split("_")[-1][:2]
+
+# Uncompres tar files
+def members_to_extract(tar):
+        date  = change_sispi_nc_files_names(tar.name, tar=True) + "23"
+        date  = datetime.strptime(date, "%Y%m%d%H")
+
+        date += timedelta(hours=1)
+        files_to_extract = ["wrfout_d03_2017-%02d-%02d_%02d:00:00" % (date.month, date.day, date.hour)]
+
+        date += timedelta(hours=3)
+        files_to_extract.append("wrfout_d03_2017-%02d-%02d_%02d:00:00" % (date.month, date.day, date.hour))
+
+        return [tar.getmember(file) for file in files_to_extract]
+                
+
+def uncompress(file, dir, extractall=True):
+        try:      
+                os.mkdir(dir)
+        except FileExistsError:
+                pass
+
+        tar = tarfile.open(file, mode='r')
+
+        if extractall:
+                tar.extractall(dir)
+        else:               
+                tar.extractall(dir, members=members_to_extract(tar))
+        
+        tar.close()
+
+   
 
 # Return a list of files from a directory
-def files_list(dir, searchtopdown=False):
+def files_list(dir, searchtopdown=False, name_condition=False):
         if not searchtopdown:
-                return [abspath(file.path) for file in scandir(dir) if file.is_file()]
+                if not name_condition:
+                        return [abspath(file.path) for file in scandir(dir) if file.is_file()]
+                else:
+                        return [abspath(file.path) for file in scandir(dir) if file.is_file() and name_condition in file.name]
         else:
                 files_list = []
                 for path, directories, files in os.walk(dir, topdown=searchtopdown):                                         
                         for file in files:
-                                files_list.append(os.path.join(path, file))     
+                                if not name_condition:
+                                        files_list.append(os.path.join(path, file))
+                                elif name_condition in file.name:
+                                        files_list.append(os.path.join(path, file))
+                                else:
+                                        pass
                 return files_list
 
 # Rename all sispi serialized outputs files in all directories of a root directory 
@@ -50,38 +97,12 @@ def rename_sispi(sispi_root_dir):
             os.rename(file, new_file)
 
 
-def ficheros_cmorph_comprimidos(cmorph):  
-        for ruta, directorios, archivos in os.walk(self.FILE_PATH, topdown=True):                 
-                for archivo in archivos:
-                        cmorph.append(archivo)
+def rename_cmorph(cmorph_root_dir):  
+    cmorph_files = files_list(cmorph_root_dir, searchtopdown=True)
 
-def uncompres_cmorph_tar_file(self):       
-        tar = tarfile.open(self.CMORPH["FILE"], mode='r')
-        tar.extractall(self.CMORPH["DIR"])
-
-
-def uncompres_cmorph_bz2_file(self, dirpath):    
-        bz2_files_list = listdir(dirpath)
-
-        for filename in bz2_files_list:
-                filepath = path.join(dirpath, filename)
-                newfilepath = path.join(dirpath, filename + ".desc")
-                with open(newfilepath, 'wb') as new_file, bz2.BZ2File(filepath, 'rb') as file:
-                        for data in iter(lambda : file.read(100 * 1024), b''):
-                                new_file.write(data)
+    for file in cmorph_files:  
+        path = file[:file.rindex("/")]
+        new_file = "d_" + file.split("/")[-1].split("_")[-1]
         
-def delete_uncompres_cmorph_tar_file_folder(self, dirpath):
-        shutil.rmtree(dirpath)
-"""      
-        def prepare_dataset():
-                cmorph = ManagerCMORPHFiles()
-                cmorph.files_queue(CMORPH) # Cargar la cola de ficheros comprimidos  
-                var = CMORPH["DIR"] + CMORPH["FILE"]
-                cmorph.uncompres_cmorph_tar_file(var, CMORPH_DIR)
-
-                folder = re.match(CMORPH["REG_EXPRESS"], CMORPH["FILE"]).groups()[0]
-
-                dirpath = CMORPH["DIR"] + "/" + folder + "/"
-                cmorph.uncompres_cmorph_bz2_file(dirpath)
-"""
-        
+        new_file = os.path.join(path, new_file)
+        os.rename(file, new_file)

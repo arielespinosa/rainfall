@@ -22,13 +22,6 @@ class NetCDF():
                        self.LoadFromFile(self.filename)
         
         def Metadata(self):
-                """
-                Si quiero formatear la fecha de str a date
-                date_str = '30-01-12'
-                formatter_string = "%d-%m-%y" 
-                datetime_object = datetime.strptime(date_str, formatter_string)
-                date_object = datetime_object.date()
-                """
                 return self.dataset.START_DATE
         
         # Guarda los datos en un fichero el cual se indica su nombre
