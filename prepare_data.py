@@ -7,7 +7,7 @@ import pytz
 from config import *
 from files.cmorph import CMORPH
 
-# Get de filename to rest for get accumulated rainfall
+# Get filename to rest for get accumulated rainfall
 def get_sispi_filename_as_datetime(filename, file_type=None):
     file = filename.split("_")[-1].split(".")[0]    
     file_date = datetime.strptime(file, "%Y%m%d%H")
@@ -16,7 +16,7 @@ def get_sispi_filename_as_datetime(filename, file_type=None):
 
     return file_to_find
 
-# Get de filename to rest for get accumulated rainfall
+# Get filename to rest for get accumulated rainfall
 def get_cmorph_filename_as_datetime(filename, file_type=None):
     file = filename.split("_")[-1].split(".")[0]    
     file_date = datetime.strptime(file, "%Y%m%d%H")
@@ -91,27 +91,12 @@ def subtitute_cmorph_estimation_for_acumulate_in_dataset():
 
             i+=1
     
-    print(i)
+    return i
  
-subtitute_cmorph_estimation_for_acumulate_in_dataset()
+# Replace_RAIN_SISPI_00_03_in_dataset. When tar file is uncompressed , new filename is same as tar file.
+# For example, file wrf d03_2017-01-02_00:00:00 is saved as d_2017010100.dat. That is why is only necesary subtitute.
+# This is for compare with satations, not for train rna because sispi and cmorph are in utc time zone
+ def replace_RAIN_SISPI():
+     pass
 
-#cmorph_accumulated_3h()
-
-
-#/home/maibyssl/Ariel/rain/proyecto/outputs/cmorph_acumulado/d_2017011516.dat
-
-"""
-f = ["/home/maibyssl/Ariel/rain/proyecto/outputs/dataset/d_2017111602.dat",
-     "/home/maibyssl/Ariel/rain/proyecto/outputs/dataset/d_2017111603.dat",
-     "/home/maibyssl/Ariel/rain/proyecto/outputs/dataset/d_2017111604.dat",]
-
-file_cmorph_acum  = read_serialize_file("/home/maibyssl/Ariel/rain/proyecto/outputs/cmorph_acumulado/d_2017111604.dat")
-result = [np.asmatrix(read_serialize_file(file)["RAIN_CMORPH"]) for file in f]
-
-val = result[0] + result[1] + result[2]
-
-print(file_cmorph_acum)
-print("\n")
-print(val)
-"""
 

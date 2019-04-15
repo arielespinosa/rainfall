@@ -45,8 +45,11 @@ def observacion():
 
 #observacion()
 
-#x = np.array([[ 1,  2,  3,  4,  5], [ 6,  7,  8,  9, 10], [11, 12, 13, 14, 15]])
-              
-#y = x * 2
+file = "/home/maibyssl/Ariel/rain/d03_2017010100/wrfout_d03_2017-01-02_00:00:00"
+#sispi = NetCDF(file)            
+#sispi.Variables(["RAINC", "RAINNC"])
 
-#print(np.meshgrid(x, y))
+new_dir = "d_" + file.split("/")[-2].split("_")[-1][:-1] + file.split(":")[0][-1] + ".dat"
+
+print(new_dir)
+#sispi.SaveToFile(os.path.join(SISPI_SERIALIZED_OUTPUT_DIR, new_dir))
