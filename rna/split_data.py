@@ -4,7 +4,7 @@ import numpy as np
 def split_sispi_grid(grid):
 
     _lat, _long = grid.shape
-    _lat  = int(_lat  / 2)
+    _lat  = int(_lat  / 3)
     _long = int(_long / 3)
 
     g1 = grid[:_lat , :_long]
