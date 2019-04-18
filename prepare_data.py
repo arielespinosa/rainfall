@@ -105,9 +105,6 @@ def sispi_and_stations_relation():
             # For each day in station who exist
             for key in observations[station].keys():
                 
-                #print(key[-2:])
-                #print(key)
-                #return 0
                 # If day is 00 or 03 search in last serialized dataset. That is 00 and 03 forecast.\
                 # Correspond to 24 and 27 h forecast from previous day
                 if key[-2:] == "00" or key[-2:] == "03":
@@ -127,7 +124,6 @@ def sispi_and_stations_relation():
                    
                     # If day is not 00 or 03 forecast means than obs day and forecast day match.
                     # Hours is what is distinct
-
                     obs = os.path.join(DATASET_DIR, "d_" + key + ".dat")
 
                     if obs in dataset:
@@ -201,7 +197,7 @@ def cmorph_and_stations_relation():
 
         stations.update({station:days})
 
-    write_serialize_file(stations, "outputs/sispi_and_stations_relations.dat")
+    write_serialize_file(stations, "outputs/cmorph_and_stations_relations.dat")
 
 # Replace_RAIN_SISPI_00_03_in_dataset. When tar file is uncompressed , new filename is same as tar file.
 # For example, file wrf d03_2017-01-02_00:00:00 is saved as d_2017010100.dat. That is why is only necesary subtitute.
@@ -210,4 +206,8 @@ def replace_RAIN_SISPI():
     pass
 
 
-sispi_and_stations_relation()
+#sispi_and_stations_relation()
+
+relation = read_serialize_file("outputs/sispi_and_stations_relations.dat")
+
+print(relation["78310"]["2017072709"])

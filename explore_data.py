@@ -8,6 +8,7 @@ import numpy as numpy
 from datetime import datetime, timedelta
 import pytz
 from config import *
+import pandas as pd
 
 def convert_stations_to_utc(filename=None):   
    
@@ -123,3 +124,59 @@ def missing_values_in_dataset():
     if len(f) > 0:
         write_serialize_file(f, "outputs/dataset_content_missing_values.dat")
 
+
+# Return a statistics resume of relation between sispi rainfall forecast and stations rainfall observation
+def statistics_sispi_stations(station = None):
+
+    if station == None:
+        return None
+
+    # Vars
+    relation = read_serialize_file("outputs/sispi_and_stations_relations.dat")
+    values   = [] 
+
+    # Implementation
+    for day in relation[station].keys():
+        values.append([relation[station][day][0], relation[station][day][1]])
+    
+    df = pd.DataFrame(np.array(values), columns=['sispi', 'station-' + station])
+
+    return df.describe()
+
+# Print some statisticians resume of relation between sispi rainfall forecast and stations rainfall observation
+def statisticians_sispi_stations(station = None):
+
+    if station == None:
+        return None
+
+    # Vars
+    relation = read_serialize_file("outputs/sispi_and_stations_relations.dat")
+    values   = []
+
+    # Implementation
+    for day in relation[station].keys():
+        values.append([relation[station][day][0], relation[station][day][1]])
+    
+    dataset = np.array(values) 
+    df      = pd.DataFrame(dataset, columns=['sispi', 'station-' + station])
+
+   
+    x = {
+        "corrcoef"   : np.corrcoef(dataset[:, 0], dataset[:, 1]), # Correlation between sispi & cmorph
+        "std"        : np.std(dataset),                           # Standar desviation between sispi & cmorph
+        "std_sispi"  : np.std(dataset, 0),                        # Sispi standar desviation                
+        "std_cmorph" : np.std(dataset, 1),                        # Cmorph standar desviation
+        "var"        : np.var(dataset),                           # Varianza between sispi & cmorph
+        "var_sispi"  : np.var(dataset, 0),                        # Sispi varianza               
+        "var_cmorph" : np.var(dataset, 1),                        # Cmorph varianza
+        "cov"        : np.cov(dataset),                           # Covarianza between sispi & cmorph
+        "describe"   : df.describe(),                             # Aditional dataset descriptions
+
+    }
+ 
+    print(x["cov"][0])
+
+
+
+
+statisticians_sispi_stations("78310")
