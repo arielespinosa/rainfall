@@ -240,5 +240,13 @@ def combine_sispi_cmorph():
 
     print("You made it, Congratulations! Your code works sucessfuly.")
     
+def interpolar_cmorph_estaciones():   
+    est_data, valores = [], []
 
-combine_sispi_cmorph()
+    estaciones = np.array(read_serialize_file("outputs/stations_points"))
+    sispi = np.array(read_serialize_file("outputs/sispi_points"))
+  
+    return nearest_neighbord(est_data, sispi)
+
+
+interpolar_cmorph_estaciones()

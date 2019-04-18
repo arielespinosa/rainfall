@@ -81,8 +81,14 @@ class DataGenerator(keras.utils.Sequence):
         return (x, y)
 
 
-mlp = MultiLayerPerceptron()
+#mlp = MultiLayerPerceptron()
 
-files = files_list(DATASET_DIR)
-training_generator = DataGenerator(files)
-mlp.model.fit_generator(generator=training_generator, epochs=10)
+#files = files_list(DATASET_DIR)
+#training_generator = DataGenerator(files)
+#mlp.model.fit_generator(generator=training_generator, epochs=10)
+
+scaler = MinMaxScaler(feature_range = (0, 1))
+
+Q2 = scaler.fit_transform(np.zeros((152, 123), dtype=np.int8).reshape(1, -1))
+
+print(Q2)

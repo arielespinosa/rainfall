@@ -10,40 +10,19 @@ import pytz
 from config import *
 import pandas as pd
 
-def convert_stations_to_utc(filename=None):   
-   
-    obs     = read_serialize_file("outputs/stations_obs_data.dat")
-    data_observation = dict()
-    
-    for station in obs.keys():
+def absolute_error(a , b):
+    ae = 0
+    for i in range(len(a)):
+        ae +=  a - b
+    return ae
 
-        data = dict()
-     
-        for date in obs[station].keys():
-            for hour in obs[station][date].keys():                
-                h = int(hour.split(":")[0])
-                h = h*2 + h-2
-                observation_date = TZ_CUBA.localize(datetime.strptime(date + "-" + h.__str__(), "%Y-%m-%d-%H")).astimezone(TZ_GMT0)
-                observation_date = "%04d%02d%02d%02d" % (observation_date.year, observation_date.month, observation_date.day, observation_date.hour)
-                
-                d = { observation_date : obs[station][date][hour] }
-                data.update(d)
-        
-                del d
+def mean_square_error(a, b):
+    mse = 0
+    for i in range(len(a)):
+        mse +=  (a - b)**2
+    return mse / len(a)
 
-        data_stations = { station : data }
-
-        data_observation.update(data_stations)
-
-        del data
-        del data_stations
-      
-    if filename:
-        write_serialize_file(data_observation, filename)
-
-    return data_observation
-
-def FindMinMaxValues(dataset):
+def find_min_max_values(dataset):
     data = dict()
 
     for key in dataset.keys():
@@ -59,7 +38,7 @@ def get_min_max_values():
 
     for file in files_list(DATA_DIR):
 
-        data = FindMinMaxValues(read_serialize_file(file)) 
+        data = find_min_max_values(read_serialize_file(file)) 
 
         if data["Q2"]["min"] < minQ2:        
             minQ2 = data["Q2"]["min"]
@@ -99,12 +78,6 @@ def missing_sispi_files():
 
     return cant
         
-def missing_observations():
-    pass
-
-def standar_desviation():
-    pass
-
 def missing_values_in_dataset():
 
     files = files_list(DATASET_DIR)
@@ -143,7 +116,7 @@ def statistics_sispi_stations(station = None):
 
     return df.describe()
 
-# Print some statisticians resume of relation between sispi rainfall forecast and stations rainfall observation
+# Return some statisticians resume of relation between sispi rainfall forecast and stations rainfall observation
 def statisticians_sispi_stations(station = None):
 
     if station == None:
@@ -161,22 +134,54 @@ def statisticians_sispi_stations(station = None):
     df      = pd.DataFrame(dataset, columns=['sispi', 'station-' + station])
 
    
-    x = {
-        "corrcoef"   : np.corrcoef(dataset[:, 0], dataset[:, 1]), # Correlation between sispi & cmorph
-        "std"        : np.std(dataset),                           # Standar desviation between sispi & cmorph
-        "std_sispi"  : np.std(dataset, 0),                        # Sispi standar desviation                
-        "std_cmorph" : np.std(dataset, 1),                        # Cmorph standar desviation
-        "var"        : np.var(dataset),                           # Varianza between sispi & cmorph
-        "var_sispi"  : np.var(dataset, 0),                        # Sispi varianza               
-        "var_cmorph" : np.var(dataset, 1),                        # Cmorph varianza
-        "cov"        : np.cov(dataset),                           # Covarianza between sispi & cmorph
-        "describe"   : df.describe(),                             # Aditional dataset descriptions
-
+    statisticians = {
+        "corrcoef"   : np.corrcoef(dataset[:, 0], dataset[:, 1]),        # Correlation between sispi & stations
+        "std"        : np.std(dataset),                                  # Standar desviation between sispi & stations
+        "std_sispi"  : np.std(dataset, 0),                               # Sispi standar desviation                
+        "std_cmorph" : np.std(dataset, 1),                               # Cmorph standar desviation
+        "var"        : np.var(dataset),                                  # Varianza between sispi & cmorph
+        "var_sispi"  : np.var(dataset, 0),                               # Sispi varianza               
+        "var_cmorph" : np.var(dataset, 1),                               # Cmorph varianza
+        "cov"        : np.cov(dataset),                                  # Covarianza between sispi & cmorph
+        "ae"         : absolute_error(dataset[:, 0], dataset[:, 1]),     # Absolute error between sispi & cmorph
+        "mse"        : mean_square_error(dataset[:, 0], dataset[:, 1]),  # Mean square error between sispi & cmorph
+        "describe"   : df.describe(),                                    # Aditional dataset descriptions
     }
  
-    print(x["cov"][0])
+    return statisticians
 
+# Return some statisticians resume of relation between cmorph rainfall stimation and stations rainfall observation
+def statisticians_cmorph_stations(station = None):
 
+    if station == None:
+        return None
 
+    # Vars
+    relation = read_serialize_file("outputs/sispi_and_stations_relations.dat")
+    values   = []
 
-statisticians_sispi_stations("78310")
+    # Implementation
+    for day in relation[station].keys():
+        values.append([relation[station][day][0], relation[station][day][1]])
+    
+    dataset = np.array(values) 
+    df      = pd.DataFrame(dataset, columns=['sispi', 'station-' + station])
+
+   
+    statisticians = {
+        "corrcoef"   : np.corrcoef(dataset[:, 0], dataset[:, 1]),        # Correlation between sispi & cmorph
+        "std"        : np.std(dataset),                                  # Standar desviation between sispi & cmorph
+        "std_sispi"  : np.std(dataset, 0),                               # Sispi standar desviation                
+        "std_cmorph" : np.std(dataset, 1),                               # Cmorph standar desviation
+        "var"        : np.var(dataset),                                  # Varianza between sispi & cmorph
+        "var_sispi"  : np.var(dataset, 0),                               # Sispi varianza               
+        "var_cmorph" : np.var(dataset, 1),                               # Cmorph varianza
+        "cov"        : np.cov(dataset),                                  # Covarianza between sispi & cmorph
+        "ae"         : absolute_error(dataset[:, 0], dataset[:, 1]),     # Absolute error between sispi & cmorph
+        "mse"        : mean_square_error(dataset[:, 0], dataset[:, 1]), # Mean square error between sispi & cmorph
+        "describe"   : df.describe(),                                    # Aditional dataset descriptions
+    }
+ 
+    return statisticians
+
+#statisticians_sispi_stations("78310")
