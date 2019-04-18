@@ -36,7 +36,7 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr
 # Returns a compiled Keras model instance.
 class MultiLayerPerceptron():
 	
-	def __init__(self, parameters):
+	def __init__(self, parameters = None):
 		"""
 		self.dense_units=parameters["dense_units"]
 		self.h_activation=parameters["h_activation"]
@@ -70,7 +70,7 @@ class MultiLayerPerceptron():
 		added  = Add()([x1, x2, x3])
 
 		# Output layer
-		out    = Dense(1000, activation='sigmoid')(added)
+		out    = Dense(1000, activation='relu')(added)
 		model  = Model(inputs=[input1, input2, input3], outputs=out)
 
 		model.compile(Adam(lr=0.0001), loss='mse', metrics=["accuracy", "mse", "mae"])
@@ -86,8 +86,13 @@ class MultiLayerPerceptron():
 	def predict(self):
 		pass
 
-	def save(self):
-		pass
+	def save(self, path):
+		# Creates a HDF5 file in the path provided. Path must include file name and extension ('.h5')
+		self.model.save(path)  
+
+	def load(self, filename):
+		# Load a model from HDF5 file. Filename must include file_name and extension ('.h5')
+		self.model = load_model(filename)
 
 
 

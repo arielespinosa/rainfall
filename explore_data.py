@@ -104,5 +104,22 @@ def missing_observations():
 def standar_desviation():
     pass
 
+def missing_values_in_dataset():
 
-print(missing_sispi_files())
+    files = files_list(DATASET_DIR)
+    f = []
+    for file in files:
+
+        data = read_serialize_file(file)
+        q2 = data["Q2"] 
+        t2 = data["T2"]
+        rs = data["RAIN_SISPI"]
+        rc = data["RAIN_CMORPH"]
+
+        if np.isnan(q2).any() or np.isnan(t2).any() or np.isnan(rs).any() or np.isnan(rc).any():
+            f.append(file)
+            print(file)
+
+    if len(f) > 0:
+        write_serialize_file(f, "outputs/dataset_content_missing_values.dat")
+

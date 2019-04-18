@@ -30,14 +30,6 @@ def find_cmorph_file(cmorph_list, date):
     file_to_find = os.path.join(CMORPH_SERIALIZED_OUTPUT_DIR, file_to_find)
     return file_to_find   
 
-# Transform data for get accumulated rainfall for compare with estations
-def sispi_accumulated_in_three_hours():
-    sispi_files = files_list(DATASET_DIR)
-
-    for file in sispi_files: 
-        file_to_find = get_filename_as_datetime(file)
-
-
 # Transform CMORPH data for get accumulated rainfall as SisPI
 def cmorph_accumulated_3h():
     cmorph_files = files_list(CMORPH_SERIALIZED_OUTPUT_DIR)
@@ -93,10 +85,129 @@ def subtitute_cmorph_estimation_for_acumulate_in_dataset():
     
     return i
  
+# Create a dict dataset like station key -> dates key -> values = | sispi forecast for nearest grid point| station rainfall observation 
+# Points are interpolated. This is for calculate std, corr, mae, mse ....
+def sispi_and_stations_relation():
+
+    dataset        = files_list(DATASET_DIR)
+    sispi_files    = files_list(SISPI_SERIALIZED_OUTPUT_DIR)
+    observations   = read_serialize_file("outputs/stations_obs_data_utc.dat")
+    interpolation  = read_serialize_file("outputs/interpolacion_sispi_estaciones")
+    stations, days = dict(), dict()
+    
+    for i in range(len(interpolation)):
+        station = "78" + str(interpolation[i][0]) # Station
+        point = interpolation[i][1] # Nearest Sispi point to station
+
+        # Corto circuito
+        if station in observations.keys():
+            
+            # For each day in station who exist
+            for key in observations[station].keys():
+                
+                #print(key[-2:])
+                #print(key)
+                #return 0
+                # If day is 00 or 03 search in last serialized dataset. That is 00 and 03 forecast.\
+                # Correspond to 24 and 27 h forecast from previous day
+                if key[-2:] == "00" or key[-2:] == "03":
+
+                    obs = os.path.join(SISPI_SERIALIZED_OUTPUT_DIR, "d_" + key + ".dat")
+
+                    if obs in sispi_files:
+
+                        data = read_serialize_file(obs)
+
+                        predicted_rain = data["RAINNC"].reshape(75213, )[point] + data["RAINC"].reshape(75213, )[point]
+                        observed_rain  = observations[station][key]
+
+                        days.update({key:[predicted_rain, observed_rain]})                     
+
+                else:
+                   
+                    # If day is not 00 or 03 forecast means than obs day and forecast day match.
+                    # Hours is what is distinct
+
+                    obs = os.path.join(DATASET_DIR, "d_" + key + ".dat")
+
+                    if obs in dataset:
+
+                        data = read_serialize_file(obs)
+
+                        predicted_rain = data["RAIN_SISPI"].reshape(75213, )[point]
+                        observed_rain  = observations[station][key]
+
+                        days.update({key:[predicted_rain, observed_rain]})
+
+        stations.update({station:days})
+
+    write_serialize_file(stations, "outputs/sispi_and_stations_relations.dat")
+
+        
+# Create a dict dataset like station key -> dates key -> values = | cmorph estimation for nearest grid point| station rainfall observation 
+# Points are interpolated. This is for calculate std, corr, mae, mse ....
+def cmorph_and_stations_relation():
+
+    dataset        = files_list(DATASET_DIR)
+    sispi_files    = files_list(SISPI_SERIALIZED_OUTPUT_DIR)
+    observations   = read_serialize_file("outputs/stations_obs_data_utc.dat")
+    interpolation  = read_serialize_file("outputs/interpolacion_sispi_estaciones")
+    stations, days = dict(), dict()
+
+    dataset = []
+    
+    for i in range(len(interpolation)):
+        station = "78" + str(interpolation[i][0]) # Station
+        point = interpolation[i][1] # Nearest Sispi point to station
+
+        # Corto circuito
+        if station not in observations.keys():
+            continue
+            
+        # For each day in station who exist
+        for key in observations[station].keys():
+
+            obs = os.path.join(SISPI_SERIALIZED_OUTPUT_DIR, "d_" + key + ".dat")
+
+            # If day is 00 or 03 search in last serialized dataset. That is 00 and 03 forecast.\
+            # Correspond to 24 and 27 h forecast from previous day
+            if key[-2:] == "00" or key[-2:] == "03":
+
+                if obs in sispi_files:
+
+                    data = read_serialize_file(obs)
+
+                    predicted_rain = data["RAINNC"].reshape(75213, )[point] + data["RAINC"].reshape(75213, )[point]
+                    observed_rain  = observations[station][key]
+
+                    #print(type(data["RAINNC"]))
+                    #print(predicted_rain, observed_rain)
+                    #print(station, key)
+                    #print(station, point)
+                    days.update({key:[predicted_rain, observed_rain]})                        
+                    
+            else:
+                
+                # If day is not 00 or 03 forecast means than obs day and forecast day match.
+                # Hours is what is distinct
+                if obs in dataset:
+
+                    data = read_serialize_file(obs)
+
+                    predicted_rain = data["RAINNC"].reshape(75213, )[point] + data["RAINC"].reshape(75213, )[point]
+                    observed_rain  = observations[station][key]
+
+                    days.update({key:[predicted_rain, observed_rain]})   
+
+        stations.update({station:days})
+
+    write_serialize_file(stations, "outputs/sispi_and_stations_relations.dat")
+
 # Replace_RAIN_SISPI_00_03_in_dataset. When tar file is uncompressed , new filename is same as tar file.
 # For example, file wrf d03_2017-01-02_00:00:00 is saved as d_2017010100.dat. That is why is only necesary subtitute.
 # This is for compare with satations, not for train rna because sispi and cmorph are in utc time zone
- def replace_RAIN_SISPI():
-     pass
+def replace_RAIN_SISPI():
+    pass
 
 
+sispi_and_stations_relation()
