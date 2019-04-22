@@ -176,7 +176,37 @@ def sispi_and_stations_relation():
 # Create a dict dataset like station key -> dates key -> values = | cmorph estimation for nearest grid point| station rainfall observation 
 # Points are interpolated. This is for calculate std, corr, mae, mse ....
 def cmorph_and_stations_relation():
-    pass
+
+    dataset        = files_list(DATASET_DIR)
+    observations   = read_serialize_file("outputs/stations_obs_data_utc.dat")
+    interpolation  = read_serialize_file("outputs/interpolacion_sispi_estaciones")
+    stations, days = dict(), dict()
+    
+    for i in range(len(interpolation)):
+        station = "78" + str(interpolation[i][0]) # Station
+        point = interpolation[i][1] # Nearest Sispi point to station
+
+        if station in observations.keys():
+
+            # For each day in station who exist
+            for key in observations[station].keys():  
+
+                # All cmorph data are in dataset. Is not necesary do more than read
+                # the var from thats files.
+                obs = os.path.join(DATASET_DIR, "d_" + key + ".dat")
+
+                if obs in dataset:
+
+                    data = read_serialize_file(obs)
+
+                    cmorph_estimated_rain = data["RAIN_CMORPH"].reshape(75213, )[point]
+                    observed_rain  = observations[station][key]
+
+                    days.update({key:[cmorph_estimated_rain, observed_rain]})
+
+        stations.update({station:days})
+
+    write_serialize_file(stations, "outputs/cmorph_and_stations_relations.dat")
 
 # Replace_RAIN_SISPI_00_03_in_dataset. When tar file is uncompressed , new filename is same as tar file.
 # For example, file wrf d03_2017-01-02_00:00:00 is saved as d_2017010100.dat. That is why is only necesary subtitute.
@@ -186,7 +216,4 @@ def replace_RAIN_SISPI():
 
 
 #sispi_and_stations_relation()
-
-relation = read_serialize_file("outputs/sispi_and_stations_relations.dat")
-
-print(relation["78310"]["2017072709"])
+#cmorph_and_stations_relation()
