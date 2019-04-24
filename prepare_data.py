@@ -208,6 +208,18 @@ def cmorph_and_stations_relation():
 
     write_serialize_file(stations, "outputs/cmorph_and_stations_relations.dat")
 
+
+def occidental_zone_in_sispi():
+    sispi = np.array(read_serialize_file("outputs/sispi_points"))
+    _long = sispi[:411, 0]
+
+    # Mayabeque latitud limit is 81.40. Occidental Zone
+    # Result is 149
+    return np.searchsorted(_long, -81.40, side="right") 
+    
+
+
+
 # Replace_RAIN_SISPI_00_03_in_dataset. When tar file is uncompressed , new filename is same as tar file.
 # For example, file wrf d03_2017-01-02_00:00:00 is saved as d_2017010100.dat. That is why is only necesary subtitute.
 # This is for compare with satations, not for train rna because sispi and cmorph are in utc time zone
@@ -217,3 +229,4 @@ def replace_RAIN_SISPI():
 
 #sispi_and_stations_relation()
 #cmorph_and_stations_relation()
+occidental_zone_in_sispi()

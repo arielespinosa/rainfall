@@ -89,6 +89,12 @@ def missing_values_in_dataset():
         t2 = data["T2"]
         rs = data["RAIN_SISPI"]
         rc = data["RAIN_CMORPH"]
+<<<<<<< HEAD
+
+        if np.isnan(q2).any() or np.isnan(t2).any() or np.isnan(rs).any() or np.isnan(rc).any():
+            f.append(file)
+            print(file)
+=======
 
         if np.isnan(q2).any() or np.isnan(t2).any() or np.isnan(rs).any() or np.isnan(rc).any():
             f.append(file)
@@ -96,8 +102,15 @@ def missing_values_in_dataset():
 
     if len(f) > 0:
         write_serialize_file(f, "outputs/dataset_content_missing_values.dat")
+>>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
 
+    if len(f) > 0:
+        write_serialize_file(f, "outputs/dataset_content_missing_values.dat")
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
 # Return a statistics resume of relation between sispi rainfall forecast and stations rainfall observation
 def statistics_sispi_stations(station = None):
 
@@ -119,9 +132,15 @@ def statistics_sispi_stations(station = None):
 # Get an station vector
 # Return some statisticians resume of relation between sispi rainfall forecast or cmorph rainfal estimation and stations rainfall observation
 # Source = ["sispi", "cmorph"]
+<<<<<<< HEAD
+def statisticians(_stations = None, source = None):
+
+    if _stations == None:
+=======
 def statisticians(get_station = None, source = None):
 
     if get_station == None:
+>>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
         return None
   
     # Vars
@@ -136,7 +155,17 @@ def statisticians(get_station = None, source = None):
     stations = dict()
 
     # Implementation
+<<<<<<< HEAD
+    if _stations == "all":
+        get_stations = relation.keys()
+    else:
+        get_stations = _stations
+
+
+    for station in get_stations:
+=======
     for station in get_station:
+>>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
         for day in relation[station].keys():
             values.append([relation[station][day][0], relation[station][day][1]])
         
@@ -165,6 +194,10 @@ def statisticians(get_station = None, source = None):
  
     return stations
 
+<<<<<<< HEAD
+#s = statisticians(["78310"], "cmorph")
+#print(s["78310"]["describe"])
+=======
 # Return some statisticians resume of relation between cmorph rainfall stimation and stations rainfall observation
 def statisticians_cmorph_stations(station = None):
 
@@ -202,4 +235,5 @@ def statisticians_cmorph_stations(station = None):
 s = statisticians(["78310"], "cmorph")
 print(s["78310"]["describe"])
 
+>>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
 #statisticians("78310", "cmorph")
