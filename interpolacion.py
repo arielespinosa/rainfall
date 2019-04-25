@@ -53,6 +53,14 @@ def vecino_mas_cercano(sispi, cmorph):
     valores_columnas = cmorph[:165,0]
     valores_filas    = cmorph[::165,1]
 
+    #print(valores_columnas)
+    #print(valores_filas)
+
+    print(sispi)
+
+    return 0
+
+
     valores_filas    = [n * -1 for n in valores_filas]
 
     for punto in sispi:
@@ -65,7 +73,7 @@ def vecino_mas_cercano(sispi, cmorph):
         p4 = cmorph_indice(j+1, i+1) # El punto abajo a la derecha
        
         for i in p1, p2, p3, p4:  # Encuentra el mas cercano y guarda el indice
-            distancia = 10
+            distancia = 100
             p = cmorph[i]
             d = math.sqrt(pow((punto[0] - p[0]), 2) + (pow((punto[1] - p[1]), 2)))           
 
@@ -75,12 +83,16 @@ def vecino_mas_cercano(sispi, cmorph):
 
         v = (ind_sispi, indice, distancia)
 
-        print("Coordenadas: ", i, j)
-        print("Punto de SisPI: ", punto)
-        print("Puntos de CMORPH: ", cmorph[p1], cmorph[p2], cmorph[p3], cmorph[p4])
-        print("Indices de interpolacion: ", v)
-        print("Puntos de interpolacion: ", punto, cmorph[indice])
-        print("---------------------------------------------\n")
+        if distancia > 10:            
+            print("Coordenadas: ", i, j)
+            print("Punto de SisPI: ", punto)
+            print("Puntos de CMORPH: ", cmorph[p1], cmorph[p2], cmorph[p3], cmorph[p4])
+            print("Indices de interpolacion: ", v)
+            print("Puntos de interpolacion: ", punto, cmorph[indice])
+            print("Distancia: ", distancia)
+            print("---------------------------------------------\n")
+            
+            return 0
 
         interpolacion.append(v)
         ind_sispi += 1
@@ -91,20 +103,18 @@ def vecino_mas_cercano(sispi, cmorph):
 # la relacion entre indice Sispi/ indice Cmorph la guarda en un fichero
 def interpolar_sispi_cmorph():
 
-    t1 = ReadCMORPH()
-    t2 = ReadSispi()
-    t1.start()
-    t2.start()
+    #t1 = ReadCMORPH()
+    #t2 = ReadSispi()
+    #t1.start()
+    #t2.start()
 
-    cmorph           = np.array(read_serialize_file("cmorph_points"))
-    sispi            = np.array(read_serialize_file("sispi_points"))   
+    cmorph           = np.array(read_serialize_file("outputs/cmorph_points"))
+    sispi            = np.array(read_serialize_file("outputs/sispi_points"))   
 
     interpolacion    = vecino_mas_cercano(sispi, cmorph)
 
-    write_serialize_file(interpolacion, "interpolacion_sispi_cmorph")
+    write_serialize_file(interpolacion, "interpolacion_sispi_cmorph2.dat")
 
-def read_interpolation_values(file):
-    return read_serialize_file(file)
 
 # ESTACIONES 
 def sispi_indice(fila, columna):
@@ -169,8 +179,8 @@ def vecino_mas_cercano2(grid1, grid2):
 def interpolar_sispi_estaciones():   
     est_data, valores = [], []
 
-    estaciones = np.array(read_serialize_file("estaciones"))
-    sispi = np.array(read_serialize_file("sispi"))
+    estaciones = np.array(read_serialize_file("outputs/stations_points"))
+    sispi = np.array(read_serialize_file("outputs/sispi_points"))
    
     for v in estaciones:
         
@@ -187,7 +197,15 @@ def interpolar_sispi_estaciones():
         valores = []
     
     return vecino_mas_cercano2(est_data, sispi)
-    
+
+
+def interpolar_cmorph_estaciones():   
+    est_data, valores = [], []
+
+    estaciones = np.array(read_serialize_file("outputs/stations_points"))
+    sispi = np.array(read_serialize_file("outputs/sispi_points"))
+  
+    return nearest_neighbord(est_data, sispi)
 
 #----------- Combinar los datos de sispi y de cmorph interpolados -------------------
 def combine_sispi_cmorph():
@@ -238,15 +256,7 @@ def combine_sispi_cmorph():
                 filename = "d_" + file_id 
                 write_serialize_file(data, os.path.join(DATASET_DIR, filename))
 
-    print("You made it, Congratulations! Your code works sucessfuly.")
-    
-def interpolar_cmorph_estaciones():   
-    est_data, valores = [], []
-
-    estaciones = np.array(read_serialize_file("outputs/stations_points"))
-    sispi = np.array(read_serialize_file("outputs/sispi_points"))
-  
-    return nearest_neighbord(est_data, sispi)
 
 
-interpolar_cmorph_estaciones()
+#interpolar_cmorph_estaciones()
+interpolar_sispi_cmorph()

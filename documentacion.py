@@ -45,21 +45,5 @@ def observacion():
 #encontrar()
 
 
-
-a = [[i, i+1] for i in range(10)]
-b = [[i, i+1] for i in range(10, 20)]
-
-c = []
-c.append(a)
-c.append(b)
-c = np.array(a)
-
-df = pd.DataFrame(c)
-
-print(a, b)
-print("\n")
-print(c)
-print("\n")
-print(df)
-
-#df.describe()
+i = read_serialize_file("interpolacion_sispi_cmorph")
+print(i)

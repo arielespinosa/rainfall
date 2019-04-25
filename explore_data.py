@@ -89,12 +89,6 @@ def missing_values_in_dataset():
         t2 = data["T2"]
         rs = data["RAIN_SISPI"]
         rc = data["RAIN_CMORPH"]
-<<<<<<< HEAD
-
-        if np.isnan(q2).any() or np.isnan(t2).any() or np.isnan(rs).any() or np.isnan(rc).any():
-            f.append(file)
-            print(file)
-=======
 
         if np.isnan(q2).any() or np.isnan(t2).any() or np.isnan(rs).any() or np.isnan(rc).any():
             f.append(file)
@@ -102,15 +96,7 @@ def missing_values_in_dataset():
 
     if len(f) > 0:
         write_serialize_file(f, "outputs/dataset_content_missing_values.dat")
->>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
 
-    if len(f) > 0:
-        write_serialize_file(f, "outputs/dataset_content_missing_values.dat")
-
-<<<<<<< HEAD
-
-=======
->>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
 # Return a statistics resume of relation between sispi rainfall forecast and stations rainfall observation
 def statistics_sispi_stations(station = None):
 
@@ -129,18 +115,12 @@ def statistics_sispi_stations(station = None):
 
     return df.describe()
 
-# Get an station vector
+# Get an station vector example ["78310", "78411"] or string value "all". This means get all station.
 # Return some statisticians resume of relation between sispi rainfall forecast or cmorph rainfal estimation and stations rainfall observation
 # Source = ["sispi", "cmorph"]
-<<<<<<< HEAD
 def statisticians(_stations = None, source = None):
 
     if _stations == None:
-=======
-def statisticians(get_station = None, source = None):
-
-    if get_station == None:
->>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
         return None
   
     # Vars
@@ -155,17 +135,12 @@ def statisticians(get_station = None, source = None):
     stations = dict()
 
     # Implementation
-<<<<<<< HEAD
     if _stations == "all":
         get_stations = relation.keys()
     else:
         get_stations = _stations
 
-
     for station in get_stations:
-=======
-    for station in get_station:
->>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
         for day in relation[station].keys():
             values.append([relation[station][day][0], relation[station][day][1]])
         
@@ -191,49 +166,23 @@ def statisticians(get_station = None, source = None):
         }
 
         stations.update({station:statisticians})
- 
     return stations
 
-<<<<<<< HEAD
+def min_max_distance_between_sispi_cmorph():
+    pass
+
+def min_max_distance_between_sispi_stations():
+    relation = np.array(read_serialize_file("outputs/interpolacion_sispi_cmorph"))
+    #relation = np.sort(relation[:, 2])
+    print(np.searchsorted(relation[:, 2], 0.9))
+    print(relation[73283, 2])
+
+    relation = np.sort(relation[:, 2])
+    print(relation[73000])
+
+
+min_max_distance_between_sispi_stations()
+ 
 #s = statisticians(["78310"], "cmorph")
 #print(s["78310"]["describe"])
-=======
-# Return some statisticians resume of relation between cmorph rainfall stimation and stations rainfall observation
-def statisticians_cmorph_stations(station = None):
-
-    if station == None:
-        return None
-
-    # Vars
-    relation = read_serialize_file("outputs/sispi_and_stations_relations.dat")
-    values   = []
-
-    # Implementation
-    for day in relation[station].keys():
-        values.append([relation[station][day][0], relation[station][day][1]])
-    
-    dataset = np.array(values) 
-    df      = pd.DataFrame(dataset, columns=['sispi', 'station-' + station])
-
-   
-    statisticians = {
-        "corrcoef"   : np.corrcoef(dataset[:, 0], dataset[:, 1]),        # Correlation between sispi & cmorph
-        "std"        : np.std(dataset),                                  # Standar desviation between sispi & cmorph
-        "std_sispi"  : np.std(dataset, 0),                               # Sispi standar desviation                
-        "std_cmorph" : np.std(dataset, 1),                               # Cmorph standar desviation
-        "var"        : np.var(dataset),                                  # Varianza between sispi & cmorph
-        "var_sispi"  : np.var(dataset, 0),                               # Sispi varianza               
-        "var_cmorph" : np.var(dataset, 1),                               # Cmorph varianza
-        "cov"        : np.cov(dataset),                                  # Covarianza between sispi & cmorph
-        "ae"         : absolute_error(dataset[:, 0], dataset[:, 1]),     # Absolute error between sispi & cmorph
-        "mse"        : mean_square_error(dataset[:, 0], dataset[:, 1]),  # Mean square error between sispi & cmorph
-        "describe"   : df.describe(),                                    # Aditional dataset descriptions
-    }
- 
-    return statisticians
-
-s = statisticians(["78310"], "cmorph")
-print(s["78310"]["describe"])
-
->>>>>>> fac3e499b1dcd64f28d7451a30b3daab7d7cad21
 #statisticians("78310", "cmorph")

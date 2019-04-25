@@ -48,7 +48,7 @@ class CMORPH():
                 self.TOP      =  25                                                    
                 self.BOTTOM   =  19
                 self.LEFT     = -86
-                self.RIGHT    = -74
+                self.RIGHT    = -72
 
                 self.filename =  filename                
 
