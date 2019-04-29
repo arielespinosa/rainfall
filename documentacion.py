@@ -45,5 +45,6 @@ def observacion():
 #encontrar()
 
 
-i = read_serialize_file("interpolacion_sispi_cmorph")
+i = read_serialize_file("outputs/observaciones_utc_2017.dat")
 print(i)
+

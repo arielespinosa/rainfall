@@ -1,5 +1,6 @@
 from os.path import abspath
 from files.netcdf import *
+from files.observations import *
 from pickle import dump, dumps, load, loads
 from shutil import rmtree
 import collections
@@ -181,8 +182,10 @@ def min_max_distance_between_sispi_stations():
     print(relation[73000])
 
 
-min_max_distance_between_sispi_stations()
+#min_max_distance_between_sispi_stations()
  
 #s = statisticians(["78310"], "cmorph")
 #print(s["78310"]["describe"])
 #statisticians("78310", "cmorph")
+
+

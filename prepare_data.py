@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import pytz
 from config import *
 from files.cmorph import CMORPH
+from files.observations import Observations
 
 # Get filename to rest for get accumulated rainfall
 def get_sispi_filename_as_datetime(filename, file_type=None):
@@ -217,7 +218,27 @@ def occidental_zone_in_sispi():
     # Result is 149
     return np.searchsorted(_long, -81.40, side="right") 
     
+# no me guarda el dato
+def divide_observation_by_period():
 
+    observation = Observations("outputs/observaciones_utc.csv")
+    
+    data = {
+        "dry":{
+              "morning":observation.GetAsPeriod(period="dry", date_time="morning"),
+            "afternoon":observation.GetAsPeriod(period="dry", date_time="afternoon"),
+        },
+        "rainy":{
+              "morning":observation.GetAsPeriod(period="rainy", date_time="morning"),
+            "afternoon":observation.GetAsPeriod(period="rainy", date_time="afternoon"),
+        },
+    }
+
+    # print(data["dry"]["morning"].Mes.unique())
+    # print(data["rainy"]["afternoon"].Mes.unique())
+    # print(data["dry"]["morning"].Hora.unique())
+    # print(data["rainy"]["afternoon"].Hora.unique())
+    write_serialize_file("outputs/observations_divided_in_periods", data)
 
 
 # Replace_RAIN_SISPI_00_03_in_dataset. When tar file is uncompressed , new filename is same as tar file.
@@ -229,4 +250,4 @@ def replace_RAIN_SISPI():
 
 #sispi_and_stations_relation()
 #cmorph_and_stations_relation()
-occidental_zone_in_sispi()
+divide_observation_by_period()

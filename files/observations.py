@@ -19,6 +19,8 @@ class Observations():
                 pass
         elif self.filename != None and self.filename[-4:] == ".dat":
                 self.LoadFromFile(self.filename)
+        else:
+            pass
 
     def Read(self):
         return pd.read_csv(self.filename, sep=',')
@@ -32,7 +34,7 @@ class Observations():
         return dataset
 
     # Guarda los datos en un fichero el cual se indica su nombre
-    def SaveToFile(self, filename):
+    def __SaveToFile(self, filename):
         with open(filename, "wb") as f:
             dump(self.dataset, f, protocol=2)
 
@@ -110,12 +112,64 @@ class Observations():
 
         self.dataset = stations
 
-        self.SaveToFile("outputs/observaciones_utc_2017.dat")
+        self.__SaveToFile("outputs/observaciones_utc_2017.dat")
  
+    # Return all observation data separated by period.
+    def GetAsPeriod(self, period = None, date_time = None):
+        # dry period -> Diciembre - Abril
+        # rainy period -> Mayo - Noviembre
+        # date_time morning -> 00 <= hour < 12
+        # date_time afternoon -> 12 <= hour < 24
+        
+        # rainy and morning
 
-                
+        if (period is not "dry" or "rainy") or (date_time is not "morning" or "afternoon"):
+            pass
+            #return None
 
+        if period is "rainy" and date_time is "morning":
+            return self.stations[
+                            ((self.stations['Mes']  >= 5)  | (self.stations['Mes']  < 12)) &
+                            ((self.stations['Hora'] <= 15) & (self.stations['Hora'] >= 6)) &
+                             (self.stations['RR'].notna())
+                             ]
 
+        elif period is "rainy" and date_time is "afternoon":
+            return self.stations[
+                            ((self.stations['Mes']  >= 5)  | (self.stations['Mes']  < 12)) &
+                            ((self.stations['Hora'] >= 18) | (self.stations['Hora'] <= 3)) & 
+                             (self.stations['RR'].notna())
+                             ]
 
+        elif period is "dry" and date_time is "morning":
+            return self.stations[
+                            ((self.stations['Mes']  <= 4)  | (self.stations['Mes']  == 12)) &
+                            ((self.stations['Hora'] <= 15) & (self.stations['Hora'] >= 6))  &
+                             (self.stations['RR'].notna())
+                             ]
 
+        elif period is "dry" and date_time is "afternoon":
+            return self.stations[
+                            ((self.stations['Mes']  <= 4)  | (self.stations['Mes']  == 12)) &
+                            ((self.stations['Hora'] >= 18) | (self.stations['Hora'] <= 3))  & 
+                             (self.stations['RR'].notna())
+                             ]
 
+    # recive the 1st dict I create (func PrepareData I think)
+    def Convert_DataFrame_to_UTC(self):
+
+        stations, year, month, day, hour, rr = [], [], [], [], [], []
+
+        for station in self.dataset.keys():
+            for _datetime in self.dataset[station].keys():
+                stations.append(station)
+                year.append(_datetime[:4])
+                month.append(_datetime[4:6])
+                day.append(_datetime[6:8])
+                hour.append(_datetime[8:10])
+                rr.append(self.dataset[station][_datetime])
+
+        df = pd.DataFrame({"Estacion": stations, "Ano": year, "Mes": month, "Dia": day, "Hora": hour, "RR": rr})
+        df.to_csv('outputs/observaciones_utc.csv', mode='w')
+
+    
