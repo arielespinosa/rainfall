@@ -69,7 +69,7 @@ class Uncompress_Thread(threading.Thread):
     def run(self):
      
         uncompress(self.file, self.dir)
-        cmorph_files = files_list(self.output_dir)
+        cmorph_files = fileslist(self.output_dir)
         print(cmorph_files)
         
         self.threads = [Thread_Cmorph_Files(file) for cmorph_tar_gz_file in cmorph_files]
@@ -91,7 +91,7 @@ class Uncompress_Thread(threading.Thread):
         #rmtree(self.dir)
        
 def StartSerialization(CMORPH_DIR):  
-    CMORPH_FILES = files_list(CMORPH_DIR)   
+    CMORPH_FILES = fileslist(CMORPH_DIR)
 
     cmorph_threads = [Thread_Cmorph_Files(cmorph_bz_file) for cmorph_bz_file in CMORPH_FILES]
 
@@ -118,7 +118,7 @@ def StartSerialization(CMORPH_DIR):
 
 def remove_files(f_list):
 
-    serialized = files_list(CMORPH_SERIALIZED_OUTPUT_DIR)
+    serialized = fileslist(CMORPH_SERIALIZED_OUTPUT_DIR)
 
     name = "/home/ariel/Ariel/2017/cmorph/CMORPH_V1.0_ADJ_8km-30min_"
 
@@ -136,7 +136,7 @@ def remove_files(f_list):
        
 def StartSerializationInCluster(CMORPH_DIR): 
   
-    CMORPH_FILES = files_list(CMORPH_DIR)  
+    CMORPH_FILES = fileslist(CMORPH_DIR)
     
     # print(len(CMORPH_FILES))
     remove_files(CMORPH_FILES)

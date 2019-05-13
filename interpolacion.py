@@ -6,7 +6,7 @@ import numpy as np
 import threading
 from numpy import random
 import math
-from preprocess.files import read_serialize_file, files_list, write_serialize_file
+from preprocess.files import read_serialize_file, fileslist, write_serialize_file
 
 
 t_columnas = 192
@@ -358,8 +358,8 @@ def combine_sispi_cmorph():
     SISPI_DIR     = "/home/maibyssl/Ariel/rain/proyecto/outputs/sispi"
     CMORPH_DIR    = "/home/maibyssl/Ariel/rain/proyecto/outputs/cmorph"
     DATASET_DIR   = "/home/maibyssl/Ariel/rain/proyecto/outputs/dataset"
-    sispi_files   = files_list(SISPI_DIR, searchtopdown = True)
-    cmorph_files  = files_list(CMORPH_DIR, searchtopdown = True)
+    sispi_files   = fileslist(SISPI_DIR, searchtopdown = True)
+    cmorph_files  = fileslist(CMORPH_DIR, searchtopdown = True)
     interpolation = read_serialize_file("/home/maibyssl/Ariel/rain/proyecto/outputs/interpolacion_sispi_cmorph")
 
     for sispi_file in sispi_files:

@@ -4,7 +4,7 @@ from files.observations import *
 from pickle import dump, dumps, load, loads
 from shutil import rmtree
 import collections
-from preprocess.files import files_list, read_serialize_file, write_serialize_file
+from preprocess.files import fileslist, read_serialize_file, write_serialize_file
 import numpy as numpy
 from datetime import datetime, timedelta
 import pytz
@@ -15,7 +15,7 @@ import math
 # Missing --------------------------------------------------------------------------
 def missing_sispi_files():
     actual_date = datetime(year = 2017, month = 1, day = 1)
-    existing_files = [file.split("_")[-1].split(".")[0] for file in files_list(DATASET_DIR)]
+    existing_files = [file.split("_")[-1].split(".")[0] for file in fileslist(TRAIN_DATASET)]
     cant = 0
     days = []
 
@@ -48,7 +48,7 @@ def missing_sispi_files_by_date(missing_datetime_list):
 
 def missing_values_in_dataset():
 
-    files = files_list(DATASET_DIR)
+    files = fileslist(TRAIN_DATASET)
     f = []
     for file in files:
 
@@ -200,7 +200,7 @@ def min_max_values_in_dataset():
 
     minQ2, maxQ2, minT2, maxT2, maxRAIN_SISPI, maxRAIN_CMORPH  = 10.0, 0.0, 500.0, 0.0, 0.0, 0.0
 
-    for file in files_list(DATASET_DIR):
+    for file in fileslist(TRAIN_DATASET):
 
         data = find_min_max_values(read_serialize_file(file)) 
 

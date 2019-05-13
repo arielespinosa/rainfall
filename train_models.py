@@ -1,5 +1,5 @@
 import os
-from preprocess.files import files_list, read_serialize_file, write_serialize_file
+from preprocess.files import fileslist, read_serialize_file, write_serialize_file
 from config import *
 import numpy as np
 import keras
@@ -92,8 +92,8 @@ parameters_lstm = {
 }
 
 # Load serialized data files ready for start to start train  proccess (OK)
-train_files   = files_list(DATASET_DIR)
-predict_files = files_list(PREDICT_DIR)
+train_files   = fileslist(TRAIN_DATASET)
+predict_files = fileslist(PREDICT__DATASET)
 
 # This is for not let the networks train with same dataset (OK)
 rnd.shuffle(train_files)

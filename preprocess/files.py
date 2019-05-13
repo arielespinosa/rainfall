@@ -33,8 +33,8 @@ def change_sispi_nc_files_names(filename, tar=False):
 # Uncompres tar files
 # Not change file name...Extract as it's in the tar file
 def members_to_extract(tar):
-        date  = change_sispi_nc_files_names(tar.name, tar=True) + "23"
-        date  = datetime.strptime(date, "%Y%m%d%H")
+        date = change_sispi_nc_files_names(tar.name, tar=True) + "23"
+        date = datetime.strptime(date, "%Y%m%d%H")
         files_to_extract = []
 
         for i in range(1, 7):
@@ -44,25 +44,25 @@ def members_to_extract(tar):
         return [tar.getmember(file) for file in files_to_extract]
                 
         
-def uncompress(file, dir, extractall=True):
+def uncompress(file, path, _extractall=True):
         try:      
-                os.mkdir(dir)
+                os.mkdir(path)
         except FileExistsError:
                 pass
 
         tar = tarfile.open(file, mode='r')
 
-        if extractall:
-                tar.extractall(dir)
+        if _extractall:
+                tar.extractall(path)
         else:               
-                tar.extractall(dir, members=members_to_extract(tar))
+                tar.extractall(path, members=members_to_extract(tar))
         
         tar.close()
 
    
 
 # Return a list of files from a directory
-def files_list(dir, searchtopdown=False, name_condition=False):
+def fileslist(dir, searchtopdown=False, name_condition=False):
         if not searchtopdown:
                 if not name_condition:
                         return [abspath(file.path) for file in scandir(dir) if file.is_file()]
@@ -83,7 +83,7 @@ def files_list(dir, searchtopdown=False, name_condition=False):
 # Rename all sispi serialized outputs files in all directories of a root directory 
 # Remove ":" and concatenate year-month-day-hour like CMORPH output files
 def rename_sispi(sispi_root_dir):  
-    sispi_files = files_list(sispi_root_dir, searchtopdown=True)
+    sispi_files = fileslist(sispi_root_dir, searchtopdown=True)
 
     for file in sispi_files:  
         path = file[:file.rindex("/")]
@@ -98,7 +98,7 @@ def rename_sispi(sispi_root_dir):
 
 
 def rename_cmorph(cmorph_root_dir):  
-    cmorph_files = files_list(cmorph_root_dir, searchtopdown=True)
+    cmorph_files = fileslist(cmorph_root_dir, searchtopdown=True)
 
     for file in cmorph_files:  
         path = file[:file.rindex("/")]

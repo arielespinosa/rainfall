@@ -129,27 +129,5 @@ class NetCDF():
                         del var_key
 
                 return data
-        
-        def StackData(self):
-                """ 
-                data = None
-                for key in self.data.keys():
-                        if data is not None and data != key:
-                                data = np.dstack((data, self.dataset[key]))
-                                print(key)
-                                continue
-                        
-                        data = key
-                        print(data)
-                         
-                        if data is not None:
-                                data = np.dstack((data, self.dataset[key]))
-                                continue
-                        data = np.dstack(self.dataset[key])
-                """
-                a = np.reshape(np.array(self.dataset["RAINC"]), (183, 411))
-                b = np.reshape(np.array(self.dataset["T2"]), (183, 411))
 
-                print(a.shape)
-                return np.concatenate((a, b), axis=1)
 

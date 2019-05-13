@@ -1,6 +1,6 @@
 from files.netcdf import *
 from shutil import rmtree
-from preprocess.files import files_list, read_serialize_file, write_serialize_file
+from preprocess.files import fileslist, read_serialize_file, write_serialize_file
 import numpy as numpy
 from datetime import datetime, timedelta
 import pytz
@@ -65,7 +65,7 @@ def convert_stations_to_utc(filename=None):
 
 # Transform CMORPH data for get accumulated rainfall as SisPI
 def cmorph_accumulated_3h():
-    cmorph_files = files_list(CMORPH_SERIALIZED_OUTPUT_DIR)
+    cmorph_files = fileslist(CMORPH_SERIALIZED_OUTPUT_DIR)
     interpolation = read_serialize_file("outputs/interpolation_sispi_and_cmorph.dat")
     
     date = datetime(2017, 1, 1)
@@ -102,8 +102,8 @@ def cmorph_accumulated_3h():
         date += timedelta(hours=1)
 
 def subtitute_cmorph_estimation_for_acumulate_in_dataset():
-    data_files = files_list(DATASET_DIR)
-    cmorph_files = files_list(CMORPH_ACUMULATED)
+    data_files = fileslist(TRAIN_DATASET)
+    cmorph_files = fileslist(CMORPH_ACUMULATED)
 
     for data_file in data_files:
         
@@ -118,7 +118,7 @@ def subtitute_cmorph_estimation_for_acumulate_in_dataset():
     
 # Merge RAINC and RAINNC vars in dataset after serialize SisPI - 0k
 def merge_rainc_rainnc():
-    sispi = files_list(SISPI_SERIALIZED_OUTPUT_DIR)
+    sispi = fileslist(SISPI_SERIALIZED_OUTPUT_DIR)
 
     for file in sispi:
         data = read_serialize_file(file)
@@ -132,8 +132,8 @@ def merge_rainc_rainnc():
 # Create SisPI and station relation depending if you want
 # same day 5 first hours or 25-29 forecast hours
 def fife_hours_sispi_and_stations_relation():
-    dataset       = files_list(DATASET_DIR)
-    sispi_files   = files_list(SISPI_SERIALIZED_OUTPUT_DIR)
+    dataset       = fileslist(TRAIN_DATASET)
+    sispi_files   = fileslist(SISPI_SERIALIZED_OUTPUT_DIR)
     observations  = read_serialize_file("outputs/stations_obs_data_utc.dat")
     interpolation = read_serialize_file("outputs/interpolation_sispi_and_stations.dat")
 
@@ -151,7 +151,7 @@ def fife_hours_sispi_and_stations_relation():
             for day in observations[station].keys():
                 if int(day[-2:]) == 3:
     
-                    obs_00_05_03 = os.path.join(DATASET_DIR, "d_" + day + ".dat")
+                    obs_00_05_03 = os.path.join(TRAIN_DATASET, "d_" + day + ".dat")
                     obs_24_29_03 = os.path.join(SISPI_SERIALIZED_OUTPUT_DIR, "d_" + day + ".dat")   
 
                     # If both file exist
@@ -183,8 +183,8 @@ def fife_hours_sispi_and_stations_relation():
     write_serialize_file(stations_24_29, "outputs/24_29_sispi_and_stations_relations.dat")
 
 def substitute_sispi_forecast_00_05_by_24_29():
-    sispi_00_05 = files_list(DATASET_DIR) 
-    sispi_24_29 = files_list(SISPI_SERIALIZED_OUTPUT_DIR)
+    sispi_00_05 = fileslist(TRAIN_DATASET)
+    sispi_24_29 = fileslist(SISPI_SERIALIZED_OUTPUT_DIR)
 
     for file in sispi_00_05:
         temp_file = file.split("/")[-1]
@@ -207,9 +207,9 @@ def substitute_sispi_forecast_00_05_by_24_29():
 # Points are interpolated. This is for calculate std, corr, mae, mse ....
 def sispi_and_stations_relation():
 
-    dataset        = files_list(DATASET_DIR)
-    #sispi_files    = files_list(SISPI_SERIALIZED_OUTPUT_DIR)
-    sispi_files    = files_list("outputs/sispi (copy)")
+    dataset        = fileslist(TRAIN_DATASET)
+    #sispi_files    = fileslist(SISPI_SERIALIZED_OUTPUT_DIR)
+    sispi_files    = fileslist("outputs/sispi (copy)")
     observations   = read_serialize_file("outputs/stations_obs_data_utc.dat")
     interpolation  = read_serialize_file("outputs/interpolation_sispi_and_stations.dat")
     stations, days = dict(), dict()
@@ -243,7 +243,7 @@ def sispi_and_stations_relation():
                    
                     # If day is not 00 or 03 forecast means than obs day and forecast day match.
                     # Hours is what is distinct
-                    obs = os.path.join(DATASET_DIR, "d_" + key + ".dat")                   
+                    obs = os.path.join(TRAIN_DATASET, "d_" + key + ".dat")
 
                     if obs in dataset:
                   
@@ -262,7 +262,7 @@ def sispi_and_stations_relation():
 # Is using cmorph grid interpolation. This is for calculate std, corr, mae, mse ....
 def cmorph_and_stations_relation():
 
-    dataset        = files_list(DATASET_DIR)
+    dataset        = fileslist(TRAIN_DATASET)
     observations   = read_serialize_file("outputs/stations_obs_data_utc.dat")
     interpolation  = read_serialize_file("outputs/interpolation_cmorph_and_stations.dat")
     stations, days = dict(), dict()
@@ -279,7 +279,7 @@ def cmorph_and_stations_relation():
                 # All cmorph data are in dataset. Is not necesary do more than read the var from thats files.
                 # The experiment design is because we are using cmorph as better rainfall forecast..So, we need to know
                 # who is better: cmorph interpolated to sispi point or sispi point it self
-                obs = os.path.join(DATASET_DIR, "d_" + day + ".dat")
+                obs = os.path.join(TRAIN_DATASET, "d_" + day + ".dat")
 
                 if obs in dataset:
 

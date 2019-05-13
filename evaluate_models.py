@@ -6,7 +6,7 @@ from preprocess.files import *
 file = os.path.join(BASE_DIR, "rna/models/mlp_model.h5")
 
 def load_data():
-    predict_files = files_list(PREDICT_DIR)
+    predict_files = fileslist(PREDICT__DATASET)
     labels, features, keys = [], [], []
 
     for file in predict_files:
