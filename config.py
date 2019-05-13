@@ -12,7 +12,7 @@ CMORPH_ACUMULATED = os.path.join(BASE_DIR, "outputs/cmorph_acumulado")
 SISPI_OUTPUT_DIR = os.path.join(BASE_DIR, "outputs/sispi_output")
 SISPI_SERIALIZED_OUTPUT_DIR = os.path.join(BASE_DIR, "outputs/sispi")
 DATASET_DIR = os.path.join(BASE_DIR, "outputs/dataset")
-
+PREDICT_DIR = os.path.join(BASE_DIR, "outputs/predict")
 # Time Zones
 TZ_CUBA = pytz.timezone('America/Bogota')
 TZ_GMT0 = pytz.timezone('Etc/GMT-0')

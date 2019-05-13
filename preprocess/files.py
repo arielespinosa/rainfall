@@ -31,19 +31,19 @@ def change_sispi_nc_files_names(filename, tar=False):
         return filename.split("_")[-2].replace("-", "") + filename.split("_")[-1][:2]
 
 # Uncompres tar files
+# Not change file name...Extract as it's in the tar file
 def members_to_extract(tar):
         date  = change_sispi_nc_files_names(tar.name, tar=True) + "23"
         date  = datetime.strptime(date, "%Y%m%d%H")
+        files_to_extract = []
 
-        date += timedelta(hours=1)
-        files_to_extract = ["wrfout_d03_2017-%02d-%02d_%02d:00:00" % (date.month, date.day, date.hour)]
-
-        date += timedelta(hours=3)
-        files_to_extract.append("wrfout_d03_2017-%02d-%02d_%02d:00:00" % (date.month, date.day, date.hour))
+        for i in range(1, 7):
+                date += timedelta(hours=1)
+                files_to_extract.append("wrfout_d03_2017-%02d-%02d_%02d:00:00" % (date.month, date.day, date.hour))
 
         return [tar.getmember(file) for file in files_to_extract]
                 
-
+        
 def uncompress(file, dir, extractall=True):
         try:      
                 os.mkdir(dir)

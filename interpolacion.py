@@ -9,7 +9,7 @@ import math
 from preprocess.files import read_serialize_file, files_list, write_serialize_file
 
 
-t_columnas = 165
+t_columnas = 192
 t_columnas_sispi = 411
 t_filas = 182
 
@@ -40,10 +40,16 @@ class ReadSispi(threading.Thread):
             self.wrf = NetCDF("/home/maibyssl/Ariel/rain/proyecto/wrfout_d03")
             self.wrf.Vars(['XLONG', 'XLAT'])
             self.wrf.SaveToFile("sispi_points")
-            
-# El dado un i, j de cmorph en forma matricial devuelve el indice en el arreglo unidimencional
+
+
+# Dado un i, j de cmorph en forma matricial devuelve el indice en el arreglo unidimencional
 def cmorph_indice(fila, columna):
     return (fila - 1) * t_columnas + columna - 1
+
+# Dado un i, j de sispi en forma matricial devuelve el indice en el arreglo unidimencional
+def sispi_indice(fila, columna):
+    return (fila - 1) * t_columnas_sispi + columna - 1
+
 
 # Vecino mas cercano entre Sispi y Cmorph
 def vecino_mas_cercano(sispi, cmorph):
@@ -99,8 +105,9 @@ def vecino_mas_cercano(sispi, cmorph):
 
     return interpolacion
 
+
 # Realiza la interpolacion entre Sispi y Cmorph y 
-# la relacion entre indice Sispi/ indice Cmorph la guarda en un fichero
+# la relacion entre indice Sispi / indice Cmorph la guarda en un fichero
 def interpolar_sispi_cmorph():
 
     #t1 = ReadCMORPH()
@@ -117,9 +124,6 @@ def interpolar_sispi_cmorph():
 
 
 # ESTACIONES 
-def sispi_indice(fila, columna):
-    return (fila - 1) * t_columnas_sispi + columna - 1
-
 def read_estaciones():
     estaciones, inst, data = [], [], []
 
@@ -145,67 +149,209 @@ def read_estaciones():
 
     return data
 
-# Interpola la region grid1 a grid2. Si se indica un id sera la primera posicion del grid
-def vecino_mas_cercano2(grid1, grid2):    
-    indice, distancia = -1, 1
-    interpolacion = []
+
+# Interpolation Methods ---------------------------------------------------------------------------
+def nearest_neighbord_sispi_and_cmorph(cmorph_grid, sispi_grid):
+
+    interpolation = []
+    sispi_point   = 0
+
+    cmorph_long = cmorph_grid[ :192, 0] 
+    cmorph_lat  = cmorph_grid[::192, 1]
+
+    cmorph_lat = [n * -1 for n in cmorph_lat]
+
+    for punto in sispi_grid:
+
+        i = np.searchsorted(cmorph_long, punto[0]) # column
+        j = np.searchsorted(cmorph_lat, punto[1]*-1)    # row
+
+      
+        p1 = cmorph_indice(j, i)     # El punto donde el valor se mantiene ordenado tanto por las columnas como las filas 
+        p2 = cmorph_indice(j, i+1)   # El punto anterior a la izquierda
+        p3 = cmorph_indice(j+1, i)   # El punto abajo
+        p4 = cmorph_indice(j+1, i+1) # El punto abajo a la izquierda
+        
+        """
+        print(cmorph_long)
+        print(cmorph_lat)
+        print("\n")
+        print(i, j)
+        print("Punto: ", punto)
+        print("Punto sispi 1: ", p1)
+        print("Punto sispi 2: ", p2)
+        print("Punto sispi 3: ", p3)
+        print("Punto sispi 4: ", p4)
+
+        print("Punto sispi lon1: ", cmorph_grid[p1])
+        print("Punto sispi lon2: ", cmorph_grid[p2])
+        print("Punto sispi lat1: ", cmorph_grid[p3])
+        print("Punto sispi lat2: ", cmorph_grid[p4])
+
+        return 0
+        """
+        indice, distance = -1, 5
+
+        for i in p1, p2, p3, p4:  # Encuentra el mas cercano y guarda el indice
+
+            p = cmorph_grid[i]
+            d = math.sqrt( (punto[0]-p[0])**2 + (punto[1]-p[1])**2 )           
+
+            if d < distance: # Actualiza el id de la estacion mas cercana al punto de Sispi
+                distance = d               
+                indice = i    
+
+        v = (sispi_point, indice, distance)
+
+        interpolation.append(v)
+
+        sispi_point += 1
+    
+    return interpolation
+
+def nearest_neighbord_sispi_and_stations(grid1, grid2):    
+    interpolation = []
 
     valores_columnas = grid2[:411, 0]
     valores_filas = grid2[::411, 1]
  
     for punto in grid1:
-        i = np.searchsorted(valores_columnas, punto[1][0]) # columna
-        j = np.searchsorted(valores_filas, punto[1][1]) # fila  
+     
+        i = np.searchsorted(valores_columnas, punto[1]) # column
+        j = np.searchsorted(valores_filas, punto[2])    # row
 
+      
         p1 = sispi_indice(j, i)     # El punto donde el valor se mantiene ordenado tanto por las columnas como las filas 
-        p2 = sispi_indice(j, i+1)   # El punto proximo a la derecha
-        p3 = sispi_indice(j+1, i)   # El punto abajo
-        p4 = sispi_indice(j+1, i+1) # El punto abajo a la derecha
+        p2 = sispi_indice(j, i-1)   # El punto anterior a la izquierda
+        p3 = sispi_indice(j-1, i)   # El punto abajo
+        p4 = sispi_indice(j-1, i-1) # El punto abajo a la izquierda
+        
+        """
+        print(i, j)
+        print("Punto: ", punto[1], punto[2])
+        print("Punto sispi 1: ", p1)
+        print("Punto sispi 2: ", p2)
+        print("Punto sispi 3: ", p3)
+        print("Punto sispi 4: ", p4)
+
+        print("Punto sispi lon1: ", valores_columnas[i])
+        print("Punto sispi lon2: ", valores_columnas[i-1])
+        print("Punto sispi lat1: ", valores_filas[j])
+        print("Punto sispi lat2: ", valores_filas[j-1])
+
+        return 0
+        """
+
+        index, distance = -1, 5
 
         for i in p1, p2, p3, p4:  # Encuentra el mas cercano y guarda el indice
+
+            
+
             p = grid2[i]
-            d = math.sqrt(pow((punto[1][0] - p[0]), 2) + (pow((punto[1][1] - p[1]), 2)))           
+            d = math.sqrt(pow((punto[1] - p[0]), 2) + (pow((punto[2] - p[1]), 2)))           
 
-            if d < distancia: # Actualiza el id de la estacion mas cercana al punto de Sispi
-                distancia = d               
-                indice = i    
+            if d < distance: # Actualiza el id de la estacion mas cercana al punto de Sispi
+                distance = d               
+                index    = i    
 
-            v = (punto[0], indice, distancia)
-        interpolacion.append(v)
+        v = (punto[0], index, distance)
+
+        interpolation.append(v)
     
-    return interpolacion
+    return interpolation
 
-# Realiza la interpolacion entre Sispi y las estaciones
-def interpolar_sispi_estaciones():   
-    est_data, valores = [], []
+def nearest_neighbord_cmorph_and_stations(stations_net, cmorph_grid):
 
-    estaciones = np.array(read_serialize_file("outputs/stations_points"))
-    sispi = np.array(read_serialize_file("outputs/sispi_points"))
-   
-    for v in estaciones:
+    interpolation = []
+
+    cmorph_long = cmorph_grid[:192, 0] 
+    cmorph_lat  = [lat * -1 for lat in cmorph_grid[::192, 1]]
+ 
+    for station in stations_net:
+     
+        i = np.searchsorted(cmorph_long, station[1]) # long - columns
+        j = np.searchsorted(cmorph_lat,  station[2] *-1 ) # lat  - rows
+
+      
+        p1 = cmorph_indice(j, i)     # El punto donde el valor se mantiene ordenado tanto por las columnas como las filas 
+        p2 = cmorph_indice(j, i+1)   # El punto anterior a la izquierda
+        p3 = cmorph_indice(j+1, i)   # El punto abajo
+        p4 = cmorph_indice(j+1, i+1) # El punto abajo a la izquierda
         
-        if v[1] != "":
-            estacion_id = v[1]
-        else: 
-            estacion_id = 0
+        """
+        print(cmorph_long)
+        print(cmorph_lat)
+        print("\n")
+            
+        print(i, j)
+        print("Punto: ", station)
+        print("Punto: ", station[1], station[2])
+        print("Punto sispi 1: ", p1)
+        print("Punto sispi 2: ", p2)
+        print("Punto sispi 3: ", p3)
+        print("Punto sispi 4: ", p4)
 
-        pos_long_lat = v[2][1:]
+        print("Punto sispi lon1: ", cmorph_grid[p1])
+        print("Punto sispi lon2: ", cmorph_grid[p2])
+        print("Punto sispi lat1: ", cmorph_grid[p3])
+        print("Punto sispi lat2: ", cmorph_grid[p4])
 
-        valores.append(estacion_id)    
-        valores.append(pos_long_lat)
-        est_data.append(valores)
-        valores = []
+        return 0
+        """
+
+        index, distance = -1, 5
+
+        for i in p1, p2, p3, p4:  # Encuentra el mas cercano y guarda el indice
+
+            p = cmorph_grid[i]
+            d = math.sqrt((station[1] - p[0])**2 + (station[2] - p[1])**2)           
+
+            if d < distance: # Actualiza el id de la estacion mas cercana al punto de Sispi
+                distance = d               
+                index    = i
+
+        v = (station[0], index, distance)
+
+        interpolation.append(v)
     
-    return vecino_mas_cercano2(est_data, sispi)
+    return interpolation
 
 
-def interpolar_cmorph_estaciones():   
-    est_data, valores = [], []
+# -------------- Callings -------------- 
 
-    estaciones = np.array(read_serialize_file("outputs/stations_points"))
-    sispi = np.array(read_serialize_file("outputs/sispi_points"))
-  
-    return nearest_neighbord(est_data, sispi)
+def interpolate_sispi_and_cmorph():   
+
+    cmorph = np.array(read_serialize_file("outputs/cmorph_points.dat"))  
+    sispi = np.array(read_serialize_file("outputs/sispi_points.dat"))
+
+    interpolation = np.array(nearest_neighbord_sispi_and_cmorph(cmorph, sispi))
+
+    write_serialize_file(interpolation, "outputs/interpolation_sispi_and_cmorph.dat")
+    return interpolation
+
+def interpolate_sispi_and_stations():   
+    stations = np.array(read_serialize_file("outputs/stations_points.dat"))
+    sispi    = np.array(read_serialize_file("outputs/sispi_points.dat"))
+    
+    interpolation = np.array(nearest_neighbord_sispi_and_stations(stations, sispi))
+
+    write_serialize_file(interpolation, "outputs/interpolation_sispi_and_stations.dat")
+    return interpolation
+
+# Find for each station the nearest cmorph grid point
+def interpolate_cmorph_and_stations():   
+
+    cmorph   = np.array(read_serialize_file("outputs/cmorph_points.dat"))  
+    stations = np.array(read_serialize_file("outputs/stations_points.dat"))
+
+    interpolation = np.array(nearest_neighbord_cmorph_and_stations(stations, cmorph))
+
+    write_serialize_file(interpolation, "outputs/interpolation_cmorph_and_stations.dat")
+    
+    return interpolation
+
+# End Interpolation Mmethods ---------------------------------------------------------------------------
 
 #----------- Combinar los datos de sispi y de cmorph interpolados -------------------
 def combine_sispi_cmorph():
@@ -258,5 +404,7 @@ def combine_sispi_cmorph():
 
 
 
-#interpolar_cmorph_estaciones()
-interpolar_sispi_cmorph()
+#interpolate_sispi_and_stations()
+#interpolate_sispi_and_cmorph()
+#interpolate_cmorph_and_stations()
+#print("Terminado!")

@@ -7,18 +7,12 @@ import zipfile
 import tarfile
 from os import listdir, scandir, getcwd
 from os.path import abspath
-from files.cmorph import*
+from files.cmorph import *
 from pickle import dump, dumps, load, loads
 from shutil import rmtree
 import collections
-from preprocess import *
-
-# Se dispone de 12 procesadores Intel Xeon cada uno soporta 16 hilos
-
-CMORPH_DIR = "/home/maibyssl/Ariel/2017/201702"
-CMORPH_OUTPUT_DIR = "/media/maibyssl/Resultado06/CMORPH"
-CMORPH_SERIALIZED_OUTPUT_DIR = "/home/maibyssl/Ariel/rain/proyecto/outputs/cmorph"
-
+from preprocess.files import *
+from config import *
 
 def files_list(dir):
     #SISPI_FILES = [arch.name for arch in Path(ruta).iterdir() if arch.is_file()]
@@ -55,18 +49,16 @@ class Thread_Cmorph_Files(threading.Thread):
         def __init__(self, file):
             threading.Thread.__init__(self)
             self.file = file
-            self.new_dir =  self.file.split("/")
-            self.new_dir = self.new_dir[5].__str__() + "/" + self.new_dir[6].__str__() + ".dat"            
+            self.new_dir = self.file.split("_")[-1]            
+            self.new_dir = "d_" + self.new_dir + ".dat"            
 
         def run(self):    
-            msg = "Leyendo el fichero " + self.file
-            print(msg)     
-
+            
             cmorph = CMORPH(self.file)            
-            cmorph.Read()      
-            cmorph.SaveToFile(os.path.join(CMORPH_SERIALIZED_OUTPUT_DIR, self.new_dir), add_metadata=True)
+            cmorph.Read()       
+            cmorph.EasySaveToFile(os.path.join(CMORPH_SERIALIZED_OUTPUT_DIR, self.new_dir))
 
-class MyThread(threading.Thread):
+class Uncompress_Thread(threading.Thread):
     def __init__(self, file=None):
         threading.Thread.__init__(self)
         self.file = file
@@ -96,42 +88,83 @@ class MyThread(threading.Thread):
             
             c += 1
             i += 1 
-        rmtree(self.dir)
-        print("He terminado de serializar los cmorph del ", self.new_dir)
+        #rmtree(self.dir)
        
 def StartSerialization(CMORPH_DIR):  
     CMORPH_FILES = files_list(CMORPH_DIR)   
 
-    cmorph_threads = [Thread_Cmorph_Files(cmorph_file) for cmorph_file in CMORPH_FILES]
+    cmorph_threads = [Thread_Cmorph_Files(cmorph_bz_file) for cmorph_bz_file in CMORPH_FILES]
 
     i, c = 0, 0
     
     for thread in cmorph_threads:        
-        if c > 4:
+        if c > 5:
             cmorph_threads[i-5].join()
             cmorph_threads[i-4].join()
             cmorph_threads[i-3].join()
             cmorph_threads[i-2].join()  
-            cmorph_threads[i-1].join()                      
+            cmorph_threads[i-1].join() 
+               
             c = 0                               
                   
         thread.start()
-        
-        c += 1
         i += 1
+        c += 1
     
     if thread is cmorph_threads[-1]:
         thread.join()
         rmtree(CMORPH_DIR)
-        
-if __name__ == "__main__":  
 
-    directories = os.listdir(CMORPH_OUTPUT_DIR)
-        
-    for DIR in directories:     
-        CMORPH_DIR = "/media/maibyssl/Resultado06/CMORPH"
-        CMORPH_DIR = os.path.join(CMORPH_DIR, DIR)       
-   
-        StartSerialization(CMORPH_DIR)       
+
+def remove_files(f_list):
+
+    serialized = files_list(CMORPH_SERIALIZED_OUTPUT_DIR)
+
+    name = "/home/ariel/Ariel/2017/cmorph/CMORPH_V1.0_ADJ_8km-30min_"
+
+    for file in serialized:
+        #print(type(file))
+        f_name = name + file.split("_")[-1].split(".")[0]
+
+        if f_name in f_list:
+            f_list.remove(f_name)
+
     
-    print("\nTodos los ficheros se han serializado satisfactoriamente. \nBuena suerte en la tesis Ariel. Sigue esforzandote...\n\n")
+    
+
+
+       
+def StartSerializationInCluster(CMORPH_DIR): 
+  
+    CMORPH_FILES = files_list(CMORPH_DIR)  
+    
+    # print(len(CMORPH_FILES))
+    remove_files(CMORPH_FILES)
+    # print(len(CMORPH_FILES))
+
+    cmorph_threads = [Thread_Cmorph_Files(cmorph_bz_file) for cmorph_bz_file in CMORPH_FILES]
+
+    i = len(CMORPH_FILES)
+    pause = False
+
+    for thread in cmorph_threads:
+        thread.start()
+
+        i += 1
+
+        if threading.activeCount() == 50:
+            pause = True
+            while pause:
+                if threading.activeCount() < 5:
+                    pause = False
+
+            print("Faltan.............", len(CMORPH_FILES)-i, "ficheros")
+            
+    print("Finshed!!!")
+
+
+if __name__ == "__main__":  
+    
+    StartSerializationInCluster(CMORPH_DIR)
+
+    

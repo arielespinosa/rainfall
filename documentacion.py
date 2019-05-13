@@ -1,18 +1,19 @@
-from files.observations import*
-from files.netcdf import*
-from files.cmorph import*
+#from files.observations import*
+#from files.netcdf import*
+#from files.cmorph import CMORPH
 import numpy as np
-import pandas as pd
-from datetime import datetime
-import tarfile
-import bz2
-import os
-from tensorflow import keras
+#import pandas as pd
+#from datetime import datetime
+#import tarfile
+#import bz2
+#import os
+#from tensorflow import keras
 from preprocess.files import *
-from datetime import datetime
-import pytz
+#from datetime import datetime
+#import pytz
 from config import *
-import sys
+#import sys
+#from sklearn.preprocessing import MinMaxScaler
 
 def encontrar():
     obs     = read_serialize_file("outputs/stations_obs_data.dat")
@@ -45,6 +46,10 @@ def observacion():
 #encontrar()
 
 
-i = read_serialize_file("outputs/observaciones_utc_2017.dat")
-print(i)
+data = read_serialize_file("outputs/dataset/d_2017061502.dat")
+Q2 = data["Q2"][0][130:145 , 105:130].reshape(375, 1)
+print(Q2.shape)
+
+
+
 

@@ -20,14 +20,15 @@ class Thread_Sispi_Files(threading.Thread):
         def __init__(self, file):
             threading.Thread.__init__(self)
             self.file = file  
+            self.new_dir = self.file.split("/")[-1].replace("-", "_").split("_")
+            self.new_dir = "d_" + self.new_dir[2] + self.new_dir[3] + self.new_dir[4] + self.new_dir[5][:2] + ".dat"
 
         def run(self): 
+
             sispi = NetCDF(self.file)            
-            sispi.Variables(["RAINC", "RAINNC"])
+            sispi.Variables(["Q2", "T2", "RAINC", "RAINNC"])
 
-            new_dir = "d_" + self.file.split("/")[-2].split("_")[-1][:-1] + self.file.split(":")[0][-1] + ".dat"
-
-            sispi.SaveToFile(os.path.join(SISPI_SERIALIZED_OUTPUT_DIR, new_dir))
+            sispi.SaveToFile(os.path.join(SISPI_SERIALIZED_OUTPUT_DIR, self.new_dir))
 
 class Uncompress_Sispi_Files(threading.Thread):
     def __init__(self, file=None):
@@ -38,10 +39,11 @@ class Uncompress_Sispi_Files(threading.Thread):
         self.threads = []
 
     def run(self):
+ 
         uncompress(self.file, self.dir, extractall=False)
 
         sispi_files = files_list(self.dir)
-        self.threads = [Thread_Sispi_Files(file) for file in sispi_files]
+        self.threads = [Thread_Sispi_Files(file_nc) for file_nc in sispi_files]
 
         i, c = 0, 0
         
@@ -74,7 +76,7 @@ def StartSerialization(_continue = False):
                 SISPI_FILES.remove(file)
 
     wrf_threads = [Uncompress_Sispi_Files(wrf_tar_gz_file) for wrf_tar_gz_file in SISPI_FILES]
-    
+
     i, c = 0, 0
     
     for thread in wrf_threads:
@@ -93,4 +95,6 @@ def StartSerialization(_continue = False):
         i += 1 
         
 if __name__ == "__main__":
+
+
     StartSerialization()

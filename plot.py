@@ -7,10 +7,12 @@ from files.observations import*
 from files.netcdf import*
 from files.cmorph import*
 import numpy as np
+from ann_visualizer.visualize_model import ann_viz
 
-def plot_interpolation():
-    sispi  = np.array(read_serialize_file("outputs/sispi_points"))
-    cmorph = np.array(read_serialize_file("outputs/cmorph_points"))
+def plot_interpolation():  
+    
+    sispi  = np.array(read_serialize_file("outputs/sispi_points.dat"))
+    cmorph = np.array(read_serialize_file("outputs/cmorph_points.dat"))
 
     plt.plot(sispi[:, 0], sispi[:, 1])
     plt.xlabel='lon'
@@ -22,7 +24,8 @@ def plot_interpolation():
     
 
     #print(type(sispi))
-
+def plot_model():
+    ann_viz(model, title="Artificial Neural network - Model Visualization")
 
 
 

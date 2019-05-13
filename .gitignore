@@ -1,3 +1,6 @@
 wrfout_d03
 CMORPH_V1
 /outputs
+*.dat
+*.jpg
+*.png
