@@ -9,8 +9,23 @@ import shutil
 from os import scandir
 from pickle import dump, load
 from datetime import datetime, timedelta
+from shutil import rmtree
 import pytz
+from config import *
 
+def copy(file, path):
+
+        name = "d03.tar"
+        path = "/media/maibyssl/2f5ec7df-2654-4c2e-b01c-0ac6024c88f0/SisPI"
+        
+        files = files_list(path, searchtopdown=True, name_condition=name)
+        i = 0
+        for file in files:
+                destiny = "/home/maibyssl/Ariel/rain/proyecto/data/sispi_2018_2019/"
+                destiny += file.split("/")[-1]
+                print("Percent....", i*100/len(files))
+                shutil.copyfile(file, destiny)
+                i += 1
 
 # Write a data structure in serialized binary file
 def write_serialize_file(data, file):
@@ -74,7 +89,7 @@ def fileslist(dir, searchtopdown=False, name_condition=False):
                         for file in files:
                                 if not name_condition:
                                         files_list.append(os.path.join(path, file))
-                                elif name_condition in file.name:
+                                elif name_condition in file:
                                         files_list.append(os.path.join(path, file))
                                 else:
                                         pass
@@ -106,3 +121,28 @@ def rename_cmorph(cmorph_root_dir):
         
         new_file = os.path.join(path, new_file)
         os.rename(file, new_file)
+
+def delete_folders(folders_dir):
+        
+        folders = os.listdir(folders_dir)
+
+        for folder in folders:
+                if folder[-2:] != "00":  
+                        f = os.path.join(PREDICT_DATASET, folder)                  
+                        rmtree(f)
+
+def delete_files():
+
+        files = fileslist(PREDICT_DATASET, searchtopdown=True)
+
+        for file in files:
+                f = file.split("/")
+                folder = f[-2]
+                filename = f[-1].split("_")[-1].split(".")[0]
+                
+                #print(folder, filename)
+
+                if folder[-4:-2] != filename[-4:-2]:
+                        os.remove(file)
+
+

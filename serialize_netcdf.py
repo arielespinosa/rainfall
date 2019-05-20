@@ -8,38 +8,48 @@ from config import *
 # Serialize all hourly nc file geted from SisPI dayly output uncompressed file
 class SerializeFiles(threading.Thread):
 
-    def __init__(self, file):
+    def __init__(self, file, path):
         threading.Thread.__init__(self)
         self.file = file
-        self.new_dir = self.file.split("/")[-1].replace("-", "_").split("_")
-        self.new_dir = "d_" + self.new_dir[2] + self.new_dir[3] + self.new_dir[4] + self.new_dir[5][:2] + ".dat"
-
+        self.path = path
+        name      = self.file.split("/")[-1].replace("-", "_").split("_")
+        self.name = "d_" + name[2] + name[3] + name[4] + name[5][:2] + ".dat"
+        self.name = os.path.join(self.path, self.name)
+       
     def run(self):
         sispi = NetCDF(self.file)
         sispi.Variables(["Q2", "T2", "RAINC", "RAINNC"])
+       
+        sispi.Save(self.name)
 
-        sispi.SaveToFile(os.path.join(SISPI_SERIALIZED_OUTPUT_DIR, self.new_dir))
 
 
 # Uncompress tar.bz SisPI dayly output
 class UncompressFiles(threading.Thread):
-    def __init__(self, file=None):
+    def __init__(self, file=None, path=None, delete=True):
         threading.Thread.__init__(self)
         self.file = file
-        self.new_dir = self.file.split("/")[-1][:-7].__str__() + '/'
-        self.dir = os.path.join(SISPI_OUTPUT_DIR, self.new_dir)
+        self.path = path
+        self.delete = delete
         self.threads = []
 
     def run(self):
 
-        uncompress(self.file, self.dir)
+        # Uncompress SisPI outputs tar.gz file
+        uncompress(self.file, self.path)
 
-        sispi_files = fileslist(self.dir, searchtopdown=True, name_condition="d03.tar")
-        self.threads = [SerializeFiles(file) for file in sispi_files]
+        sispi_files = fileslist(self.path)
+        
+        for file in sispi_files:
+            path = file.split("/")[-2]
+            path = os.path.join(PREDICT_DATASET, path)
+
+            self.threads.append(SerializeFiles(file, path))
 
         i, c = 0, 0
 
         for thread in self.threads:
+
             # Voy a lanzar los hilos de 3 en 3. Cuando se lancen 3 se espera a que termine para lanzar los proximos 3. 
             if c > 2:
                 self.threads[i - 3].join()
@@ -51,22 +61,34 @@ class UncompressFiles(threading.Thread):
 
             c += 1
             i += 1
-        rmtree(self.dir)
+
+        # Delete nc uncompresed temp folder when serialization process end
+        if self.delete:
+            rmtree(self.path)
 
 def start_serialization(_continue=False):
-    sispi_files = fileslist(SISPI_DIR)
+    sispi_files = fileslist(SISPI_DIR, searchtopdown=True, name_condition="d03.tar")
+    wrf_threads = []
 
     # Compare serialized and unserialize directories. Remove serialized files from files list to serialize
     # If is the firs time, its not necessary.
     if _continue:
-        serialized = fileslist(SISPI_SERIALIZED_OUTPUT_DIR)
-        serialized = [SISPI_DIR + "/" + file + ".tar.gz" for file in serialized]
 
-        for file in serialized:
+        directories = os.listdir(PREDICT_DATASET)
+
+        for folder in directories:
+
+            file = SISPI_DIR + "/" + folder + "/d03/d03.tar.gz"
+            file = os.path.abspath(file)
+
             if file in sispi_files:
                 sispi_files.remove(file)
 
-    wrf_threads = [UncompressFiles(file) for file in sispi_files]
+    for file in sispi_files:
+        path = file.split("/")[-3]
+        path = os.path.join(SISPI_OUTPUT_DIR, path)
+
+        wrf_threads.append(UncompressFiles(file, path))
 
     i, c = 0, 0
 
@@ -85,5 +107,6 @@ def start_serialization(_continue=False):
         c += 1
         i += 1
 
-
-start_serialization()
+if __name__ == "__main__":  
+    
+    start_serialization(True)

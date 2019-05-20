@@ -25,13 +25,29 @@ class NetCDF():
                 return self.dataset.START_DATE
         
         # Guarda los datos en un fichero el cual se indica su nombre
-        def SaveToFile(self, filename, add_metadata=False):
+        def SaveToFile(self, filename):
+                with open(filename, "wb") as f:
+                        dump(self.data, f, protocol=2)
+
+
+        def Save(self, filename, add_metadata=False):
+                
                 if filename.find("/") == -1:
                         with open(filename, "wb") as f:
                                 dump(self.data, f, protocol=2)
-                else:
-                        if not os.path.exists(filename):  
-                                try:                              
+                else:   
+                        if os.path.exists(filename):
+                                if add_metadata == False:
+                                        with open(filename, "wb") as f:
+                                                dump(self.data, f, protocol=2)
+                                else:   
+                                        data = { "date": self.dataset.START_DATE }
+                                        data.update(self.data)
+                                        with open(filename, "wb") as f:
+                                                dump(data, f, protocol=2)
+                        else:  
+                                try:    
+                                                           
                                         os.mkdir(filename[:filename.rfind('/')+1])
                                         if add_metadata == False:
                                                 with open(filename, "wb") as f:

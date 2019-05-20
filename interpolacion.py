@@ -317,11 +317,48 @@ def nearest_neighbord_cmorph_and_stations(stations_net, cmorph_grid):
     
     return interpolation
 
+def nearest_neighbord(grid_lat, grid_lon, point_lat, point_lon):
+    
+    i = np.searchsorted(grid_lat, point_lat) # column
+    j = np.searchsorted(grid_lon, point_lon) # row
+
+    p1 = {"i":i,   "j":j,   "lat":grid_lat[i],   "lon":grid_lon[j]}      # El punto donde el valor se mantiene ordenado tanto por las columnas como las filas 
+    p2 = {"i":i-1, "j":j,   "lat":grid_lat[i-1], "lon":grid_lon[j]}    # El punto anterior a la izquierda
+    p3 = {"i":i,   "j":j-1, "lat":grid_lat[i],   "lon":grid_lon[j-1]}   # El punto abajo
+    p4 = {"i":i-1, "j":j-1, "lat":grid_lat[i-1], "lon":grid_lon[j-1]}  # El punto abajo a la izquierda
+    
+    """
+    print(i, j)
+    print("Punto lat: ", point_lat)
+    print("Punto lon: ", point_lon)
+
+    print("Punto sispi 1: ", p1)
+    print("Punto sispi 2: ", p2)
+    print("Punto sispi 3: ", p3)
+    print("Punto sispi 4: ", p4)
+
+    print("Punto sispi lon1: ", grid_lat[i])
+    print("Punto sispi lon2: ", grid_lat[i-11])
+    print("Punto sispi lat1: ", grid_lon[j])
+    print("Punto sispi lat2: ", grid_lon[j-1])
+    """
+
+    distance = 5
+    coord = (0, 0)
+
+    for grid_point in [p1, p2, p3, p4]:  # Encuentra el mas cercano y guarda el indice
+        d = math.sqrt((grid_point["lat"] - point_lat)**2 + (grid_point["lon"] - point_lon)**2 )       
+     
+        if d < distance: # Actualiza el id de la estacion mas cercana al punto de Sispi
+            distance = d               
+            nearest  = grid_point
+
+    return (nearest["i"], nearest["j"])
+    
 
 # -------------- Callings -------------- 
 
 def interpolate_sispi_and_cmorph():   
-
     cmorph = np.array(read_serialize_file("outputs/cmorph_points.dat"))  
     sispi = np.array(read_serialize_file("outputs/sispi_points.dat"))
 
@@ -350,6 +387,24 @@ def interpolate_cmorph_and_stations():
     write_serialize_file(interpolation, "outputs/interpolation_cmorph_and_stations.dat")
     
     return interpolation
+
+def interpolate_sispi_and_stations_habana():
+    sispi    = np.array(read_serialize_file("outputs/sispi_points.dat"))
+    stations = read_serialize_file("outputs/stations_points_dict.dat")
+    interpolation = dict()
+
+    lon = sispi[:411, 0]
+    lat = sispi[::411, 1]
+
+    station = stations[78325]
+    point   = nearest_neighbord(lat, lon, station["lat"], station["long"])
+    interpolation.update({75325:{"lat":point[0]-130, "lon":point[1]-105}  })
+
+    station = stations[78373]
+    point   = nearest_neighbord(lat, lon, station["lat"], station["long"])
+    interpolation.update({78373:{"lat":point[0]-130, "lon":point[1]-105}  })
+
+    write_serialize_file(interpolation, "outputs/interp_sispi_stations_habana.dat")
 
 # End Interpolation Mmethods ---------------------------------------------------------------------------
 
@@ -403,7 +458,7 @@ def combine_sispi_cmorph():
                 write_serialize_file(data, os.path.join(DATASET_DIR, filename))
 
 
-
+interpolate_sispi_and_stations_habana()
 #interpolate_sispi_and_stations()
 #interpolate_sispi_and_cmorph()
 #interpolate_cmorph_and_stations()

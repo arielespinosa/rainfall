@@ -10,9 +10,7 @@ from keras.optimizers import Adam
 from keras import regularizers
 from keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TerminateOnNaN
 from keras.optimizers import Adam, SGD
-from sklearn.preprocessing import MinMaxScaler
-import time
-from keras_models import MultiLayerPerceptron, SVM, Long_Short_Term_Memory
+from keras_models import MultiLayerPerceptron, SVM
 import tensorflow as tf
 
 """
@@ -37,8 +35,9 @@ class DataGenerator(keras.utils.Sequence):
         self.train      = train
         self.batch_size = batch_size
         self.files_list = files_list
-        self.scaler = MinMaxScaler(feature_range = (0, 1))
+        #self.scaler = MinMaxScaler(feature_range = (0, 1))
         self.on_epoch_end()
+        self.predict_files = []
 
     def __len__(self):
         # Number of batches per epoch
@@ -68,16 +67,29 @@ class DataGenerator(keras.utils.Sequence):
 
             for file in temp_files_list:
                 data = read_serialize_file(file)
+                self.predict_files.append(file)
                 
-                Q2 = data["Q2"][130:145 , 105:130].reshape(375, )
-                T2 = data["T2"][130:145 , 105:130].reshape(375, )
-                RS = data["RAIN_SISPI"][130:145 , 105:130].reshape(375, )
-                RC = data["RAIN_CMORPH"][130:145 , 105:130].reshape(375, )
-
+                try:
+                    Q2 = data["Q2"][130:145 , 105:130].reshape(375, )
+                    T2 = data["T2"][130:145 , 105:130].reshape(375, )
+                    RS = data["RAIN_SISPI"][130:145 , 105:130].reshape(375, )
+                    
+                    if self.train:
+                        RC = data["RAIN_CMORPH"][130:145 , 105:130].reshape(375, )
+                except ValueError:
+                    Q2 = data["Q2"][0][130:145 , 105:130].reshape(375, )
+                    T2 = data["T2"][0][130:145 , 105:130].reshape(375, )
+                    RS = data["RAIN_SISPI"][130:145 , 105:130].reshape(375, )
+                    
+                    if self.train:
+                        RC = data["RAIN_CMORPH"][130:145 , 105:130].reshape(375, )
+            
                 data_Q2.append(Q2)
                 data_T2.append(T2)
                 data_RS.append(RS)
-                data_RC.append(RC)
+                
+                if self.train:
+                    data_RC.append(RC)
 
             # Normalicing data
             x = {"input_1":np.array(data_Q2) / 1000, "input_2":np.array(data_T2)  / 1000, "input_3":np.array(data_RS) / 1000}
@@ -93,6 +105,7 @@ class DataGenerator(keras.utils.Sequence):
 
             for file in temp_files_list:
                 data = read_serialize_file(file)
+                self.predict_files.append(file)
         
                 # Al substituir los valores de 24-27 horas de pronostico
                 # el diccionary de numpy lo deje con shape (1, 183, 411)
@@ -101,15 +114,26 @@ class DataGenerator(keras.utils.Sequence):
                     Q2 = data["Q2"][130:145 , 105:130].reshape(375, 1)
                     T2 = data["T2"][130:145 , 105:130].reshape(375, 1)
                     RS = data["RAIN_SISPI"][130:145 , 105:130].reshape(375, 1)
-                    RC = data["RAIN_CMORPH"][130:145 , 105:130].reshape(375, )
+                    
+                    if self.train:
+                        RC = data["RAIN_CMORPH"][130:145 , 105:130].reshape(375, )
                 except ValueError:
                     Q2 = data["Q2"][0][130:145 , 105:130].reshape(375, 1)
                     T2 = data["T2"][0][130:145 , 105:130].reshape(375, 1)
                     RS = data["RAIN_SISPI"][130:145 , 105:130].reshape(375, 1)
-                    RC = data["RAIN_CMORPH"][130:145 , 105:130].reshape(375, )
-            
-                labels.append(np.concatenate((Q2, T2, RS), 1))
-                features.append(RC)
+                    
+                    if self.train:
+                        RC = data["RAIN_CMORPH"][130:145 , 105:130].reshape(375, )
+                
+                if self.type is "mlp":
+                    labels.append(np.concatenate((Q2, T2, RS), 1))
+                elif self.type is "lstm":
+                    values = np.concatenate((Q2, T2, RS), 0)
+                    values = np.reshape(values, 1125)
+                    labels.append(values)
+
+                if self.train:
+                    features.append(RC)
 
             # Normalicing data
             x = np.array(labels) / 1000
@@ -118,7 +142,7 @@ class DataGenerator(keras.utils.Sequence):
             del labels
             del features
         
-        if self.train is True:
+        if self.train:
             return (x, y)
         else:
             return x

@@ -118,7 +118,7 @@ def subtitute_cmorph_estimation_for_acumulate_in_dataset():
     
 # Merge RAINC and RAINNC vars in dataset after serialize SisPI - 0k
 def merge_rainc_rainnc():
-    sispi = fileslist(SISPI_SERIALIZED_OUTPUT_DIR)
+    sispi = fileslist(PREDICT_DATASET, searchtopdown = True)
 
     for file in sispi:
         data = read_serialize_file(file)
@@ -342,4 +342,5 @@ def replace_RAIN_SISPI():
 
 # divide_observation_by_period()
 
-substitute_sispi_forecast_00_05_by_24_29()
+# substitute_sispi_forecast_00_05_by_24_29()
+# merge_rainc_rainnc()

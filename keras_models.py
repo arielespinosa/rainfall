@@ -1,8 +1,7 @@
 '''
   Implementation of custom keras regression models.
-  This is prepare for train on:
-  Pinar del Rio, Artemisa, La Habana y Mayabeque.
-  That is why shape input is 27267
+  This is prepare for train in La Habana.
+  That is why shape input is (375, 3)
 '''
 import os
 import pickle
@@ -43,22 +42,31 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr
 class SVM():
 	
 	def __init__(self, parameters = None):
+		if type(parameters) is dict:
+			self.dense_units=parameters["dense_units"]
+			self.h_activation=parameters["h_activation"]
+			self.o_activation=parameters["o_activation"]
+			self.batch_norm=parameters["batch_norm"]
+			self.dropout=parameters["dropout"]
+			self.dropout_rate=parameters["dropout_rate"]
+			self.kernel_initializer=parameters["kernel_initializer"]
+			self.optimizer=parameters["optimizer"]
+			self.loss=parameters["loss"]
+			self.metrics=parameters["metrics"]
+			self.callbacks=parameters["callbacks"]
+			self.shape=parameters["shape"]
+			self.name = parameters["name"]
+			
+			self.model = self.__create()
+			self.history = None
+
+		elif type(parameters) is str:
+			self.model = self.load(parameters)
+			name = parameters.split("/")[-1].split(".")[0]
+			self.name = name
+		else:
+			return None
 		
-		self.dense_units=parameters["dense_units"]
-		self.h_activation=parameters["h_activation"]
-		self.o_activation=parameters["o_activation"]
-		self.batch_norm=parameters["batch_norm"]
-		self.dropout=parameters["dropout"]
-		self.dropout_rate=parameters["dropout_rate"]
-		self.kernel_initializer=parameters["kernel_initializer"]
-		self.optimizer=parameters["optimizer"]
-		self.loss=parameters["loss"]
-		self.metrics=parameters["metrics"]
-		self.callbacks=parameters["callbacks"]
-		self.shape=parameters["shape"]
-		self.name = parameters["name"]
-		
-		self.model = self.__create()
 	
 	def __create(self):
 
@@ -97,26 +105,46 @@ class SVM():
 		return model
 	
 	def train(self, training_generator, validation_generator, workers, use_multiprocessing, epochs):
-		return self.model.fit_generator(generator=training_generator, validation_data=validation_generator, callbacks=self.callbacks, workers=workers, use_multiprocessing=use_multiprocessing, epochs=epochs)
+		self.history = self.model.fit_generator(generator=training_generator, validation_data=validation_generator, callbacks=self.callbacks, workers=workers, use_multiprocessing=use_multiprocessing, epochs=epochs)
 	
 	def evaluate(self, x_test, y_test, batch_size):
 		return self.model.evaluate(x_test, y_test, batch_size=batch_size)
 
-	def predict(self, x_test, batch_size):
-		return self.model.predict(x_test, batch_size=batch_size)
+	def predict_generator(self, predict_generator, path_to_save = None):
+		results = self.model.predict_generator(generator = predict_generator, verbose = 1)
+		
+		if path_to_save is None:
+			path_to_save = "rna/outputs/predictions/" + self.name + ".dat"
+			path_to_save = os.path.join(BASE_DIR, path_to_save)
+			write_serialize_file(results, path_to_save)
+		else:
+			write_serialize_file(results, path_to_save)
 
-	def save(self, path):
+		return results
+
+	def predict(self, x_labels):
+		return self.model.predict(x_labels)
+
+	def save(self, path = None):
 		# Creates a HDF5 file in the path provided. Path must include file name and extension ('.h5')')
 		if path:
 			self.model.save(path)
 		else:
-			name = "logs/" + self.name + ".h5"
+			name = "rna/models/" + self.name + ".h5"
 			name = os.path.join(BASE_DIR, name)
-			self.model.save(name)   
+			self.model.save(name)  
+
+	def save_history(self, path = None):
+		# Creates a HDF5 file in the path provided. Path must include file name and extension ('.h5')
+		if path:
+			write_serialize_file(self.history, path)
+		else:
+			path = "rna/models/" + self.name + ".dat"
+			write_serialize_file(self.history, path)    
 
 	def load(self, filename):
 		# Load a model from HDF5 file. Filename must include file_name and extension ('.h5')
-		self.model = load_model(filename)
+		return load_model(filename)
 
 class MultiLayerPerceptron():
 	
@@ -142,6 +170,8 @@ class MultiLayerPerceptron():
 
 		elif type(parameters) is str:
 			self.model = self.load(parameters)
+			name = parameters.split("/")[-1].split(".")[0]
+			self.name = name
 		else:
 			return None
 		
@@ -198,76 +228,15 @@ class MultiLayerPerceptron():
 			name = os.path.join(BASE_DIR, name)
 			self.model.save(name)   
 
+	def save_history(self, path = None):
+		# Creates a HDF5 file in the path provided. Path must include file name and extension ('.h5')
+		if path:
+			write_serialize_file(self.history, path)
+		else:
+			path = "rna/models/" + self.name + ".dat"
+			write_serialize_file(self.history, path) 
+
 	def load(self, path):
 		# Load a model from HDF5 file. Path must include file_name and extension ('.h5')
 		return load_model(path)
 
-class Long_Short_Term_Memory():
-
-	def __init__(self, parameters):	
-		if type(parameters) is dict:
-			self.lstm_units 			= parameters["lstm_units"]
-			self.h_activation			= parameters["h_activation"]
-			self.o_activation			= parameters["o_activation"]	    
-			self.loss							= parameters["loss"]
-			self.batch_shape			= parameters["batch_shape"]
-			self.optimizer				= parameters["optimizer"]   
-			self.stateful					= parameters["stateful"]
-			self.metrics 		   		= parameters["metrics"]     
-			self.return_sequences	= parameters["return_sequences"]
-			self.callbacks				= parameters["callbacks"]
-			self.name 						= parameters["name"]
-
-			self.model						= self.__create_model()
-			self.history					= None
-
-		elif type(parameters) is str:
-			self.model = self.load(parameters)
-		else:
-			return None
-
-	def __create_model(self):
-		
-		model = Sequential()
-		model.add(LSTM(1325, return_sequences=True, stateful=True, batch_input_shape=self.batch_shape))
-
-		for i in range(len(self.lstm_units)):
-			model.add(LSTM(self.lstm_units[i], return_sequences = self.return_sequences[i], activation = self.h_activation, stateful = self.stateful[i]))
-	
-		model.add(Dense(self.batch_shape[1], activation = self.o_activation))
-		model.compile(self.optimizer, loss = self.loss, metrics = self.metrics)
-		return model
-
-	def train(self, training_generator, validation_generator, workers, use_multiprocessing, epochs):
-		self.history = self.model.fit_generator(generator = training_generator, validation_data = validation_generator, callbacks = self.callbacks, workers = workers, use_multiprocessing = use_multiprocessing, epochs = epochs)
-	
-	def evaluate(self, x_test, y_test, batch_size):
-		return self.model.evaluate(x_test, y_test, batch_size = batch_size)
-
-	def predict_generator(self, predict_generator, path_to_save = None):
-		results = self.model.predict_generator(generator = predict_generator, verbose = 1)
-		
-		if path_to_save is None:
-			name = "rna/outputs/predictions/" + self.name + ".dat"
-			name = os.path.join(BASE_DIR, name)
-			write_serialize_file(results, name)
-		else:
-			write_serialize_file(results, path_to_save)
-
-		return results
-
-	def predict(self, x_labels):
-		return self.model.predict(x_labels)
-
-	def save(self, path = None):
-		# Creates a HDF5 file in the path provided. Path must include file name and extension ('.h5')')
-		if path:
-			self.model.save(path)
-		else:
-			name = "rna/models/" + self.name + ".h5"
-			name = os.path.join(BASE_DIR, name)
-			self.model.save(name)   
-
-	def load(self, filename):
-		# Load a model from HDF5 file. Filename must include file_name and extension ('.h5')
-		return load_model(path)

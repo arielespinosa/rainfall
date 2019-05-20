@@ -3,11 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.pylab import *
 from preprocess.files import *
-from files.observations import*
-from files.netcdf import*
-from files.cmorph import*
 import numpy as np
-from ann_visualizer.visualize_model import ann_viz
+
+from pylab import *
+
 
 def plot_interpolation():  
     
@@ -22,11 +21,69 @@ def plot_interpolation():
     plt.ion()
     plt.show()
     
+def plot_history(history, model_name):
 
-    #print(type(sispi))
-def plot_model():
-    ann_viz(model, title="Artificial Neural network - Model Visualization")
+    suptitle('Métricas del modelo ' + model_name)
+
+    # Plot training & validation accuracy values
+    subplot(2,2,1)
+    title('Precisión')  
+    plot(history.history['acc'])
+    plot(history.history['val_acc'])
+    ylabel('Precisión')
+    xlabel('Epoch')
+    legend(['Entrenamiento', 'Prueba'], loc='upper rigth')
+
+    # Plot training & validation loss values
+    subplot(2,2,2)
+    title('Pérdida')  
+    plot(history.history['loss'])
+    plot(history.history['val_loss'])
+    ylabel('Perdida')
+    xlabel('Época')
+    legend(['Entrenamiento', 'Prueba'], loc='upper rigth')
+ 
+    # Plot training & validation mse values
+    subplot(2,2,3)
+    title('Error cuadrático medio')  
+    plot(history.history['mean_squared_error'])
+    plot(history.history['val_mean_squared_error'])
+    ylabel('Error cuadrático medio')
+    xlabel('Época')
+    legend(['Entrenamiento', 'Prueba'], loc='upper rigth')
+
+    # Plot training & validation mae values
+    subplot(2,2,4)
+    title('Error absoluto')  
+    plot(history.history['mean_absolute_error'])
+    plot(history.history['val_mean_absolute_error'])
+    ylabel('Error absoluto')
+    xlabel('Época')
+    legend(['Entrenamiento', 'Prueba'], loc='upper rigth')
+
+    plt.show()
+
+
+def plot_metrics():
+
+    i = 1
+
+    while i < 11:
+        model = "rna/models2/svm_model_" + str(i) + ".dat"
+        name = model.split("/")[-1].split(".")[0]
+        history = read_serialize_file(model)
+        plot_history(history, name)
+        i += 1
+
+        del history
+    
+
+
+#plot_statistics()
+#plot_metrics()
 
 
 
-plot_interpolation()
+
+
+
